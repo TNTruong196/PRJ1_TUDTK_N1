@@ -1,1 +1,1 @@
-# Must git config before doing anything
+numpy==2.4.4
