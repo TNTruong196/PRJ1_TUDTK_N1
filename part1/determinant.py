@@ -1,4 +1,12 @@
-from gaussian import gaussian_eliminate
+import os
+import sys
+
+# Thêm thư mục gốc dự án vào sys.path để import nội bộ ổn định theo mọi cwd.
+PROJECT_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
+
+from part1.gaussian import gaussian_eliminate
 
 def determinant(A):
     """
