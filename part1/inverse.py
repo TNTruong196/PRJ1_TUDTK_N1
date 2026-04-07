@@ -1,38 +1,66 @@
-import numpy as np
-
-def inverse(mat: np.array):
-    """
-    Trả về ma trận nghịch đảo, nếu không khả nghịch 
-    thì trả về None
-    """
-    if mat.ndim != 2 or mat.shape[0] != mat.shape[1]:
+def _to_matrix(mat):
+    try:
+        rows = [list(row) for row in mat]
+    except TypeError:
         return None
 
-    n = mat.shape[0]
-    a = mat.astype(float).copy()
-    inversed = np.eye(n)
-    
+    if not rows:
+        return None
+
+    n_cols = len(rows[0])
+    if n_cols == 0 or any(len(row) != n_cols for row in rows):
+        return None
+
+    try:
+        return [[float(x) for x in row] for row in rows]
+    except (TypeError, ValueError):
+        return None
+
+
+def inverse(mat):
+    """Tra ve ma tran nghich dao, neu khong kha nghich thi tra ve None."""
+    a = _to_matrix(mat)
+    if a is None:
+        return None
+
+    n = len(a)
+    if n != len(a[0]):
+        return None
+
+    eps = 1e-12
+    inv = [[0.0] * n for _ in range(n)]
     for i in range(n):
-        # Tìm số lớn nhất trong cột làm pivot để đảm bảo pivot 
-        # khác 0, và giảm sai số khi tính toán với số thực
-        max_id = np.argmax(np.abs(a[i:, i])) + i
-        if np.isclose(a[max_id, i], 0):
+        inv[i][i] = 1.0
+
+    for i in range(n):
+        max_id = i
+        max_val = abs(a[i][i])
+        for r in range(i + 1, n):
+            v = abs(a[r][i])
+            if v > max_val:
+                max_val = v
+                max_id = r
+
+        if max_val <= eps:
             return None
 
-        # Hoán vị dòng
-        a[[i, max_id]] = a[[max_id, i]]
-        inversed[[i, max_id]] = inversed[[max_id, i]]
+        if max_id != i:
+            a[i], a[max_id] = a[max_id], a[i]
+            inv[i], inv[max_id] = inv[max_id], inv[i]
 
-        # Chuẩn hóa để pivot về 1
-        pivot = a[i, i]
-        a[i] /= pivot
-        inversed[i] /= pivot
-        
-        # Triệt tiêu các dòng khác
-        for j in range(n):
-            if j != i:
-                factor = a[j, i]
-                a[j] -= factor * a[i]
-                inversed[j] -= factor * inversed[i]
+        pivot = a[i][i]
+        for c in range(n):
+            a[i][c] /= pivot
+            inv[i][c] /= pivot
 
-    return inversed
+        for r in range(n):
+            if r == i:
+                continue
+            factor = a[r][i]
+            if abs(factor) <= eps:
+                continue
+            for c in range(n):
+                a[r][c] -= factor * a[i][c]
+                inv[r][c] -= factor * inv[i][c]
+
+    return inv
