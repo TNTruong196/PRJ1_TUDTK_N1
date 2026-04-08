@@ -1,18 +1,16 @@
 """Diagonalization: A = P D P^{-1}.
 
-This implementation keeps the requested approach:
-- Reuse Part 1 rank_and_basis to find eigenspaces from null spaces.
-- Reuse Part 1 inverse to compute P^{-1}.
-- For n >= 5, use numpy.linalg.eigvals as suggested by the addendum.
+Core algorithm uses pure Python lists.
+NumPy is used only for np.linalg.eigvals when n > 5.
 """
 
 from __future__ import annotations
 
+import cmath
+import math
 import os
 import sys
 import unittest
-
-import numpy as np
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
@@ -20,149 +18,260 @@ if parent_dir not in sys.path:
     sys.path.append(parent_dir)
 
 from part1.inverse import inverse
+from part1.matrix_utils import identity, infinity_norm, matmul, to_matrix
 from part1.rank_basis import rank_and_basis
 
 
-def get_char_poly_coeffs(A: np.ndarray) -> list[float]:
-    """Return characteristic polynomial coefficients via Faddeev-LeVerrier."""
-    n = A.shape[0]
+def _mat_add(A: list[list[float]], B: list[list[float]]) -> list[list[float]]:
+    return [[A[i][j] + B[i][j] for j in range(len(A[0]))] for i in range(len(A))]
+
+
+def _mat_sub(A: list[list[float]], B: list[list[float]]) -> list[list[float]]:
+    return [[A[i][j] - B[i][j] for j in range(len(A[0]))] for i in range(len(A))]
+
+
+def _mat_scalar_mul(A: list[list[float]], c: float) -> list[list[float]]:
+    return [[A[i][j] * c for j in range(len(A[0]))] for i in range(len(A))]
+
+
+def _trace(A: list[list[float]]) -> float:
+    return sum(A[i][i] for i in range(len(A)))
+
+
+def _poly_eval(coeffs: list[float], x: complex) -> complex:
+    value = 0j
+    for coef in coeffs:
+        value = value * x + complex(coef)
+    return value
+
+
+def _durand_kerner(coeffs: list[float], max_iter: int = 3000, tol: float = 1e-12) -> list[complex]:
+    degree = len(coeffs) - 1
+    if degree <= 0:
+        return []
+
+    if abs(coeffs[0]) <= tol:
+        raise ValueError("Leading polynomial coefficient must be non-zero.")
+
+    coeffs_norm = [complex(c) / complex(coeffs[0]) for c in coeffs]
+    if degree == 1:
+        return [-coeffs_norm[1]]
+
+    radius = 1.0
+    for c in coeffs_norm[1:]:
+        radius = max(radius, abs(c))
+    radius = 1.0 + radius
+
+    roots = [radius * cmath.exp(2j * math.pi * i / degree) for i in range(degree)]
+
+    for _ in range(max_iter):
+        updated = roots[:]
+        max_delta = 0.0
+
+        for i in range(degree):
+            denom = 1.0 + 0.0j
+            for j in range(degree):
+                if i == j:
+                    continue
+                diff = roots[i] - roots[j]
+                if abs(diff) < tol:
+                    diff = complex(tol, tol)
+                denom *= diff
+
+            if abs(denom) <= tol:
+                denom = complex(tol, tol)
+
+            correction = _poly_eval(coeffs_norm, roots[i]) / denom
+            updated[i] = roots[i] - correction
+            max_delta = max(max_delta, abs(correction))
+
+        roots = updated
+        if max_delta <= tol:
+            break
+
+    return roots
+
+
+def get_char_poly_coeffs(A: list[list[float]]) -> list[float]:
+    """Tinh he so da thuc dac trung bang Faddeev-LeVerrier thuoc Python."""
+    matrix = to_matrix(A, require_square=True, error_message="Input matrix A must be square.")
+    n = len(matrix)
     coeffs = [1.0]
-    B = np.zeros_like(A, dtype=float)
+    B = [[0.0] * n for _ in range(n)]
 
     for k in range(1, n + 1):
-        Ak = A if k == 1 else A @ B
-        ck = -float(np.trace(Ak)) / k
+        Ak = matrix if k == 1 else matmul(matrix, B)
+        ck = -_trace(Ak) / k
         coeffs.append(ck)
-        B = Ak + ck * np.eye(n)
+        B = _mat_add(Ak, _mat_scalar_mul(identity(n), ck))
 
     return coeffs
 
 
-def _dedup_eigenvalues(vals: np.ndarray, tol: float = 1e-7) -> list[float]:
-    unique: list[float] = []
+def _get_eigenvalues(A: list[list[float]], tol: float = 1e-7) -> list[float]:
+    """Lay gia tri rieng dang list float thuoc Python.
+
+    Chi dung np.linalg.eigvals cho truong hop n > 5 theo yeu cau.
+    """
+    n = len(A)
+    if n > 5:
+        import numpy as np
+
+        vals = np.linalg.eigvals(A).tolist()
+    else:
+        vals = _durand_kerner(get_char_poly_coeffs(A))
+
+    unique = []
     for lam in vals:
         if abs(lam.imag) > 1e-8:
-            raise ValueError(
-                "Matrix has complex eigenvalues; current Part 1 basis/inverse pipeline supports real values only."
-            )
+            raise ValueError("Matrix has complex eigenvalues; purely real supported.")
         r = float(lam.real)
         if not any(abs(r - u) <= tol for u in unique):
             unique.append(r)
     return unique
 
 
-def _is_independent(existing: list[np.ndarray], candidate: np.ndarray, tol: float = 1e-9) -> bool:
-    if not existing:
+def _is_independent(existing_cols: list[list[float]], candidate: list[float]) -> bool:
+    if not existing_cols:
         return True
-    M_old = np.column_stack(existing)
-    r_old = np.linalg.matrix_rank(M_old, tol=tol)
-    M_new = np.column_stack(existing + [candidate])
-    r_new = np.linalg.matrix_rank(M_new, tol=tol)
-    return r_new > r_old
+
+    cols = existing_cols + [candidate]
+    n_rows = len(cols[0])
+    n_cols = len(cols)
+    M = [[cols[j][i] for j in range(n_cols)] for i in range(n_rows)]
+
+    rank, _, _, _ = rank_and_basis(M)
+    return rank == n_cols
 
 
-def diagonalize_matrix(A, cond_threshold: float = 1e8):
+def _max_abs_diff(A: list[list[float]], B: list[list[float]]) -> float:
+    best = 0.0
+    for i in range(len(A)):
+        for j in range(len(A[0])):
+            best = max(best, abs(A[i][j] - B[i][j]))
+    return best
+
+
+def _allclose(A: list[list[float]], B: list[list[float]], atol: float, rtol: float) -> bool:
+    for i in range(len(A)):
+        for j in range(len(A[0])):
+            a = A[i][j]
+            b = B[i][j]
+            if abs(a - b) > atol + rtol * abs(b):
+                return False
+    return True
+
+
+def diagonalize_matrix(A: list[list[float]], cond_threshold: float = 1e8):
     """Diagonalize A and return (P, D, P_inv)."""
-    A = np.array(A, dtype=float)
-    if A.ndim != 2 or A.shape[0] != A.shape[1]:
-        raise ValueError("Input matrix A must be square.")
+    matrix = to_matrix(A, require_square=True, error_message="Input matrix A must be a non-empty square matrix.")
+    n = len(matrix)
+    unique_eigvals = _get_eigenvalues(matrix)
 
-    n = A.shape[0]
-    if n >= 5:
-        print(f"[*] n={n} >= 5, using numpy.linalg.eigvals as allowed by addendum.")
-        eigvals = np.linalg.eigvals(A)
-    else:
-        eigvals = np.roots(get_char_poly_coeffs(A))
+    p_cols = []
+    d_diag = []
 
-    unique_eigvals = _dedup_eigenvalues(np.array(eigvals, dtype=complex))
-
-    p_cols: list[np.ndarray] = []
-    d_diag: list[float] = []
     for lam in unique_eigvals:
-        M = A - lam * np.eye(n)
+        M = _mat_sub(matrix, _mat_scalar_mul(identity(n), lam))
         _, _, _, null_basis = rank_and_basis(M)
 
         for vec in null_basis:
-            v = np.array(vec, dtype=float).reshape(-1)
-            norm = float(np.linalg.norm(v))
-            if norm <= 1e-12:
+            norm_v = math.sqrt(sum(x * x for x in vec))
+            if norm_v <= 1e-12:
                 continue
-            v = v / norm
 
+            v = [x / norm_v for x in vec]
             if _is_independent(p_cols, v):
                 p_cols.append(v)
                 d_diag.append(lam)
             if len(p_cols) == n:
                 break
+
         if len(p_cols) == n:
             break
 
     if len(p_cols) < n:
         raise ValueError(f"Matrix is not diagonalizable (found {len(p_cols)} independent eigenvectors, need {n}).")
 
-    P = np.column_stack(p_cols)
-    D = np.diag(d_diag)
-
-    cond_p = float(np.linalg.cond(P))
-    if (not np.isfinite(cond_p)) or cond_p > cond_threshold:
-        raise ValueError(f"Matrix is not diagonalizable or numerically unstable (cond(P)={cond_p:.3e}).")
+    P = [[p_cols[j][i] for j in range(n)] for i in range(n)]
+    D = [[d_diag[i] if i == j else 0.0 for j in range(n)] for i in range(n)]
 
     P_inv = inverse(P)
     if P_inv is None:
         raise ValueError("Failed to invert P via Part 1 inverse implementation.")
 
-    return P, D, np.array(P_inv, dtype=float)
+    cond_p = infinity_norm(P) * infinity_norm(P_inv)
+    if cond_p > cond_threshold:
+        raise ValueError(f"Matrix is not diagonalizable or numerically unstable (cond(P)={cond_p:.3e}).")
+
+    return P, D, P_inv
 
 
 def verify_diagonalization(A, P, D, P_inv, atol: float = 1e-5, rtol: float = 1e-5):
-    A = np.array(A, dtype=float)
-    A_hat = P @ D @ P_inv
-    max_abs_error = float(np.max(np.abs(A - A_hat)))
-    ok = bool(np.allclose(A, A_hat, atol=atol, rtol=rtol))
+    A_m = to_matrix(A, require_square=True, error_message="Input matrix A must be a non-empty square matrix.")
+    A_hat = matmul(matmul(P, D), P_inv)
+    max_abs_error = _max_abs_diff(A_m, A_hat)
+    ok = _allclose(A_m, A_hat, atol=atol, rtol=rtol)
     return ok, max_abs_error
 
 
-def matrix_power_via_diagonalization(A, k: int, cond_threshold: float = 1e8):
+def matrix_power_via_diagonalization(A: list[list[float]], k: int, cond_threshold: float = 1e8) -> list[list[float]]:
     if k < 0:
         raise ValueError("k must be a non-negative integer.")
+
     P, D, P_inv = diagonalize_matrix(A, cond_threshold=cond_threshold)
-    Dk = np.diag(np.diag(D) ** k)
-    return P @ Dk @ P_inv
+    n = len(D)
+    Dk = [[(D[i][i] ** k) if i == j else 0.0 for j in range(n)] for i in range(n)]
+    return matmul(matmul(P, Dk), P_inv)
+
+
+def _naive_matrix_power(A: list[list[float]], k: int) -> list[list[float]]:
+    n = len(A)
+    result = identity(n)
+    base = to_matrix(A, require_square=True, error_message="Input matrix A must be square.")
+    for _ in range(k):
+        result = matmul(result, base)
+    return result
 
 
 class TestDiagonalization(unittest.TestCase):
     def test_tc1_spd_3x3(self):
-        A = np.array([[4.0, 12.0, -16.0], [12.0, 37.0, -43.0], [-16.0, -43.0, 98.0]])
+        A = [[4.0, 12.0, -16.0], [12.0, 37.0, -43.0], [-16.0, -43.0, 98.0]]
         P, D, P_inv = diagonalize_matrix(A)
         ok, _ = verify_diagonalization(A, P, D, P_inv)
         self.assertTrue(ok)
 
     def test_tc2_diagonal(self):
-        A = np.array([[5.0, 0.0, 0.0], [0.0, -2.0, 0.0], [0.0, 0.0, 7.0]])
+        A = [[5.0, 0.0, 0.0], [0.0, -2.0, 0.0], [0.0, 0.0, 7.0]]
         P, D, P_inv = diagonalize_matrix(A)
         ok, _ = verify_diagonalization(A, P, D, P_inv)
         self.assertTrue(ok)
 
     def test_tc3_regular_2x2(self):
-        A = np.array([[4.0, 1.0], [2.0, 3.0]])
+        A = [[4.0, 1.0], [2.0, 3.0]]
         P, D, P_inv = diagonalize_matrix(A)
         ok, _ = verify_diagonalization(A, P, D, P_inv)
         self.assertTrue(ok)
 
     def test_tc4_jordan_not_diagonalizable(self):
-        A = np.array([[1.0, 1.0], [0.0, 1.0]])
+        A = [[1.0, 1.0], [0.0, 1.0]]
         with self.assertRaises(ValueError):
             diagonalize_matrix(A)
 
     def test_tc5_non_square(self):
-        A = np.array([[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]])
+        A = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]
         with self.assertRaises(ValueError):
             diagonalize_matrix(A)
 
-    def test_tc6_degree_ge_5_use_eigvals_path(self):
-        np.random.seed(42)
-        M = np.random.rand(5, 5)
-        A = M @ M.T
+    def test_tc6_size_gt_5_use_eigvals_path(self):
+        A = [
+            [12.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 7.0, 0.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 4.0, 0.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 3.0, 0.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 2.0, 0.0],
+            [0.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+        ]
         P, D, P_inv = diagonalize_matrix(A)
         ok, _ = verify_diagonalization(A, P, D, P_inv)
         self.assertTrue(ok)
@@ -170,19 +279,21 @@ class TestDiagonalization(unittest.TestCase):
 
 class TestMatrixPower(unittest.TestCase):
     def test_tc1_power_spd(self):
-        A = np.array([[4.0, 12.0, -16.0], [12.0, 37.0, -43.0], [-16.0, -43.0, 98.0]])
+        A = [[4.0, 12.0, -16.0], [12.0, 37.0, -43.0], [-16.0, -43.0, 98.0]]
         A_k = matrix_power_via_diagonalization(A, 3)
-        self.assertTrue(np.allclose(A_k, np.linalg.matrix_power(A, 3), atol=1e-5, rtol=1e-5))
+        expected = _naive_matrix_power(A, 3)
+        self.assertTrue(_allclose(A_k, expected, atol=1e-5, rtol=1e-5))
 
     def test_tc2_power_diagonal(self):
-        A = np.array([[2.0, 0.0], [0.0, 3.0]])
+        A = [[2.0, 0.0], [0.0, 3.0]]
         A_k = matrix_power_via_diagonalization(A, 5)
-        self.assertTrue(np.allclose(A_k, np.linalg.matrix_power(A, 5), atol=1e-5, rtol=1e-5))
+        expected = _naive_matrix_power(A, 5)
+        self.assertTrue(_allclose(A_k, expected, atol=1e-5, rtol=1e-5))
 
     def test_tc3_power_zero(self):
-        A = np.array([[4.0, 1.0], [2.0, 3.0]])
+        A = [[4.0, 1.0], [2.0, 3.0]]
         A_k = matrix_power_via_diagonalization(A, 0)
-        self.assertTrue(np.allclose(A_k, np.eye(2), atol=1e-5, rtol=1e-5))
+        self.assertEqual(A_k, identity(2))
 
     def test_tc4_power_negative(self):
         with self.assertRaises(ValueError):
