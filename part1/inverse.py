@@ -1,66 +1,50 @@
-def _to_matrix(mat):
+import copy
+
+EPSILON = 1e-9
+
+def inverse(A):
+    """
+    Trả về ma trận nghịch đảo, nếu không khả nghịch 
+    thì trả về None
+    """
     try:
-        rows = [list(row) for row in mat]
-    except TypeError:
+        n = len(A)
+        if n == 0 or n != len(A[0]):
+            return None
+    except (TypeError, IndexError):
         return None
 
-    if not rows:
-        return None
-
-    n_cols = len(rows[0])
-    if n_cols == 0 or any(len(row) != n_cols for row in rows):
-        return None
-
-    try:
-        return [[float(x) for x in row] for row in rows]
-    except (TypeError, ValueError):
-        return None
-
-
-def inverse(mat):
-    """Tra ve ma tran nghich dao, neu khong kha nghich thi tra ve None."""
-    a = _to_matrix(mat)
-    if a is None:
-        return None
-
-    n = len(a)
-    if n != len(a[0]):
-        return None
-
-    eps = 1e-12
-    inv = [[0.0] * n for _ in range(n)]
+    a = copy.deepcopy(A)
+    inv = [[1.0 if i == j else 0.0 for j in range(n)] for i in range(n)]
+    
     for i in range(n):
-        inv[i][i] = 1.0
-
-    for i in range(n):
-        max_id = i
+        # Tìm số lớn nhất trong cột làm pivot để đảm bảo pivot 
+        # khác 0, và giảm sai số khi tính toán với số thực (Partial Pivoting)
         max_val = abs(a[i][i])
+        max_id = i
         for r in range(i + 1, n):
-            v = abs(a[r][i])
-            if v > max_val:
-                max_val = v
+            if abs(a[r][i]) > max_val:
+                max_val = abs(a[r][i])
                 max_id = r
-
-        if max_val <= eps:
+        # Kiểm tra ma trận suy biến
+        if abs(a[max_id][i]) < EPSILON:
             return None
 
-        if max_id != i:
-            a[i], a[max_id] = a[max_id], a[i]
-            inv[i], inv[max_id] = inv[max_id], inv[i]
+        # Hoán vị dòng
+        a[i], a[max_id] = a[max_id], a[i]
+        inv[i], inv[max_id] = inv[max_id], inv[i]
 
+        # Chuẩn hóa dòng để pivot về 1
         pivot = a[i][i]
-        for c in range(n):
-            a[i][c] /= pivot
-            inv[i][c] /= pivot
-
+        a[i] = [x / pivot for x in a[i]]
+        inv[i] = [x / pivot for x in inv[i]]
+        
+        # Đưa a về ma trận đơn vị
         for r in range(n):
-            if r == i:
-                continue
-            factor = a[r][i]
-            if abs(factor) <= eps:
-                continue
-            for c in range(n):
-                a[r][c] -= factor * a[i][c]
-                inv[r][c] -= factor * inv[i][c]
+            if r != i:
+                factor = a[r][i]
+                # dj = dj - factor * di
+                a[r] = [x - factor * y for x, y in zip(a[r], a[i])]
+                inv[r] = [x - factor * y for x, y in zip(inv[r], inv[i])]
 
     return inv

@@ -1,69 +1,50 @@
-def _to_matrix(mat):
-    rows = [list(row) for row in mat]
-    if not rows:
-        raise ValueError("Input matrix must be non-empty.")
-    n = len(rows[0])
-    if n == 0 or any(len(row) != n for row in rows):
-        raise ValueError("Input matrix must be rectangular.")
-    return [[float(x) for x in row] for row in rows]
+import copy
+from gaussian import gaussian_eliminate
 
+EPSILON = 1e-9
 
-def rank_and_basis(mat):
-    """Tra ve (rank, column_space_basis, row_space_basis, null_space_basis)."""
-    a = _to_matrix(mat)
-    m = len(a)
-    n = len(a[0])
-    rref = [row[:] for row in a]
+def rank_and_basis(A):
+    if not A or not A[0]:
+        return 0, [], [], []
 
-    eps = 1e-12
-    pivot_row = 0
+    a = copy.deepcopy(A)
+    m = len(A)
+    n = len(A[0])
+
+    # Tạo vector b toàn số 0
+    b = [0.0] * m
+
+    # Dùng hàm khử Gauss có sẵn để tìm ma trận tam giác trên
+    ref, x, _ = gaussian_eliminate(a, b)
+
+    # Xác định các cột chứa pivot
     pivot_cols = []
-
-    for col in range(n):
-        if pivot_row >= m:
-            break
-
-        max_id = pivot_row
-        max_val = abs(rref[pivot_row][col])
-        for r in range(pivot_row + 1, m):
-            v = abs(rref[r][col])
-            if v > max_val:
-                max_val = v
-                max_id = r
-
-        if max_val <= eps:
-            continue
-
-        if max_id != pivot_row:
-            rref[pivot_row], rref[max_id] = rref[max_id], rref[pivot_row]
-
-        pivot = rref[pivot_row][col]
-        for c in range(n):
-            rref[pivot_row][c] /= pivot
-
-        for r in range(m):
-            if r == pivot_row:
-                continue
-            factor = rref[r][col]
-            if abs(factor) <= eps:
-                continue
-            for c in range(n):
-                rref[r][c] -= factor * rref[pivot_row][c]
-
-        pivot_cols.append(col)
-        pivot_row += 1
+    curr_row = 0
+    for j in range(n):
+        if curr_row < m:
+            # Nếu đây là cột chứa pivot thì thêm vào pivot_cols
+            if abs(ref[curr_row][j]) > EPSILON:
+                pivot_cols.append(j)
+                curr_row += 1
 
     rank = len(pivot_cols)
-    col_space = [[a[r][j] for r in range(m)] for j in pivot_cols]
-    row_space = [rref[i][:] for i in range(rank)]
+    
+    # Cơ sở không gian cột
+    col_space = [[row[j] for row in A] for j in pivot_cols]
 
-    free_vars = [j for j in range(n) if j not in pivot_cols]
+    # Cơ sở không gian dòng
+    row_space = [ref[i] for i in range(rank)]
+
+    # Cơ sở không gian nghiệm (hệ Ax=0 luôn có nghiệm)
     null_space = []
-    for f in free_vars:
-        vec = [0.0] * n
-        vec[f] = 1.0
-        for i, p_col in enumerate(pivot_cols):
-            vec[p_col] = -rref[i][f]
-        null_space.append(vec)
+    if x == None:
+        # Vô nghiệm, không tồn tại cơ sở
+        null_space = None
+    elif isinstance(x, list):
+        # Có 1 nghiệm, cơ sở rỗng
+        pass
+    elif isinstance(x, dict) and 'basis' in x:
+        # Vô số nghiệm
+        null_space = x['basis']
 
     return rank, col_space, row_space, null_space
