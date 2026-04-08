@@ -9,7 +9,7 @@ def inverse(A):
     """
     try:
         n = len(A)
-        if n == 0 or n != len(A[0]):
+        if n == 0 or any(len(row) != n for row in A):
             return None
     except (TypeError, IndexError):
         return None

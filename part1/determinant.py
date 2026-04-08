@@ -7,13 +7,23 @@ def determinant(A):
     """
     Tính định thức của ma trận vuông A thông qua phép khử Gauss.
     """
-    n = len(A)
-    # Tạo vector b toàn số 0 vì hàm gaussian_eliminate cần đầu vào
+    try:
+        m = len(A)
+        n = len(A[0])
+        if m != n:
+            raise ValueError("Khong the tinh dinh thuc cho ma tran khong vuong")
+    except (TypeError, IndexError):
+        raise ValueError("Du lieu dau vao khong phai ma tran hop le")
     dummy_b = [0.0] * n
     
-    # Lấy ma trận U và số lần hoán đổi dòng
-    U, _, swaps = gaussian_eliminate(A, dummy_b)
+    U, _, swaps = gaussian_eliminate(A, dummy_b, verbose=False)
     
+    # Kiểm tra nếu sau khi khử có dòng toàn số 0 trên đường chéo -> det = 0
+    eps = 1e-9
+    for i in range(n):
+        if abs(U[i][i]) <= eps:
+            return 0.0
+            
     # Định thức đổi dấu nếu số lần hoán đổi là số lẻ
     det = 1.0 if swaps % 2 == 0 else -1.0
     
