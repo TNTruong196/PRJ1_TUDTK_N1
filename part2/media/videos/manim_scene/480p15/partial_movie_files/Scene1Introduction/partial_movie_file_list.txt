@@ -1,0 +1,6 @@
+# This file is used internally by FFMPEG.
+file 'file:D:/File of Phuc/CSC_HCMUS/TUDTK/PRJ1_TUDTK_N1/part2/media/videos/manim_scene/480p15/partial_movie_files/Scene1Introduction/1584795214_548136066_223132457.mp4'
+file 'file:D:/File of Phuc/CSC_HCMUS/TUDTK/PRJ1_TUDTK_N1/part2/media/videos/manim_scene/480p15/partial_movie_files/Scene1Introduction/4072820271_899529010_4242687973.mp4'
+file 'file:D:/File of Phuc/CSC_HCMUS/TUDTK/PRJ1_TUDTK_N1/part2/media/videos/manim_scene/480p15/partial_movie_files/Scene1Introduction/4072820271_2715564248_607973397.mp4'
+file 'file:D:/File of Phuc/CSC_HCMUS/TUDTK/PRJ1_TUDTK_N1/part2/media/videos/manim_scene/480p15/partial_movie_files/Scene1Introduction/4072820271_3861140097_111513160.mp4'
+file 'file:D:/File of Phuc/CSC_HCMUS/TUDTK/PRJ1_TUDTK_N1/part2/media/videos/manim_scene/480p15/partial_movie_files/Scene1Introduction/4072820271_2704686740_2414371487.mp4'

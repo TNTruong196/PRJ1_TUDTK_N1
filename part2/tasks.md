@@ -9,61 +9,61 @@ Hoan thanh manim_scene.py va demo_video.mp4 theo dung requirement.md, dam bao ca
 - Scene nao xong scene do co the render rieng.
 - Khong doi du lieu chuan sau khi da khoa o pha dau.
 
-## [ ] Pha A - Khoa du lieu chuan va checklist rubric
-### [ ] Task A1 - Chot bo du lieu demo
+## [x] Pha A - Khoa du lieu chuan va checklist rubric
+### [x] Task A1 - Chot bo du lieu demo
 - Dau vao: requirement.md, task2.md, decomposition.py, diagonalization.py.
 - Dau ra: bo du lieu A, L, eigenvalues, eigenvectors, P, D, P_inv su dung nhat quan.
 - DoD: bo du lieu duoc khai bao mot cho duy nhat trong manim_scene.py.
 
-### [ ] Task A2 - Chot quy tac hien thi so
+### [x] Task A2 - Chot quy tac hien thi so
 - Dau vao: bo du lieu A1.
 - Dau ra: quy tac lam tron khi hien thi (khong anh huong tinh toan noi bo).
 - DoD: co helper format so duoc dung nhat quan trong scene.
 
-### [ ] Task A3 - Lap checklist nghiem thu theo rubric
+### [x] Task A3 - Lap checklist nghiem thu theo rubric
 - Dau vao: requirement.md + task2.md.
 - Dau ra: checklist gom scene, cong thuc, verification, video format, thoi luong.
 - DoD: checklist duoc dat o cuoi file tasks.md de doi chieu khi chot video.
 
-## [ ] Pha B - Scene 1 (Intro) doc lap
-### [ ] Task B1 - Dung khung Scene 1
+## [x] Pha B - Scene 1 (Intro) doc lap
+### [x] Task B1 - Dung khung Scene 1
 - Noi dung: hien thi ma tran A va phat bieu bai toan.
 - DoD: co class Scene1Introduction render doc lap.
 
-### [ ] Task B2 - Hien thi cong thuc muc tieu
+### [x] Task B2 - Hien thi cong thuc muc tieu
 - Noi dung: A = LL^T va A = PDP^{-1}.
 - DoD: cong thuc hien thi ro, timing doc duoc.
 
-### [ ] Task B3 - Render thu Scene 1
+### [x] Task B3 - Render thu Scene 1
 - Lenh tham chieu: manim -pql manim_scene.py Scene1Introduction
 - DoD: scene chay khong loi.
 
-## [ ] Pha C - Scene 2A (SPD proof) doc lap
-### [ ] Task C1 - Truc quan tinh doi xung
+## [x] Pha C - Scene 2A (SPD proof) doc lap
+### [x] Task C1 - Truc quan tinh doi xung
 - Noi dung: highlight cap A_ij va A_ji.
 - DoD: nguoi xem nhin thay duoc A = A^T.
 
-### [ ] Task C2 - Truc quan tinh xac dinh duong
+### [x] Task C2 - Truc quan tinh xac dinh duong
 - Noi dung: tinh eigenvalues bang numpy.linalg.eig va hien thi > 0.
 - DoD: ket luan SPD xuat hien ro rang.
 
-### [ ] Task C3 - Render thu Scene 2A
+### [x] Task C3 - Render thu Scene 2A
 - DoD: phan SPD proof chay doc lap, khong can phan thay so L.
 
-## [ ] Pha D - Scene 2B (Cholesky step-by-step) doc lap
-### [ ] Task D1 - Tao data step Cholesky
+## [x] Pha D - Scene 2B (Cholesky step-by-step) doc lap
+### [x] Task D1 - Tao data step Cholesky
 - Noi dung: luu tung buoc tinh l11, l21, l31, l22, l32, l33.
 - DoD: du lieu buoc tinh tach rieng khoi animation.
 
-### [ ] Task D2 - Dung animation thay so va dien L
+### [x] Task D2 - Dung animation thay so va dien L
 - Noi dung: hien thi cong thuc tong quat + thay so tung buoc.
 - DoD: ma tran L duoc dien day du va theo thu tu dung.
 
-### [ ] Task D3 - Verify LL^T = A
+### [x] Task D3 - Verify LL^T = A
 - Noi dung: dung numpy.linalg.cholesky de doi chieu va hien thi ket qua.
 - DoD: ket luan Cholesky hoan tat hien thi ro.
 
-### [ ] Task D4 - Render thu Scene 2 day du
+### [x] Task D4 - Render thu Scene 2 day du
 - Lenh tham chieu: manim -pql manim_scene.py Scene2CholeskyProcess
 - DoD: scene chay khong loi, nhin ro cac buoc.
 
@@ -123,12 +123,12 @@ Hoan thanh manim_scene.py va demo_video.mp4 theo dung requirement.md, dam bao ca
 - H phu thuoc: G.
 
 ## Checklist nghiem thu (rubric gate)
-- [ ] Co du 3 scene dung noi dung bat buoc.
-- [ ] Co hien thi ly thuyet va cong thuc chinh xac.
-- [ ] Co su dung numpy.linalg.cholesky trong source de verification.
-- [ ] Co su dung numpy.linalg.eig trong source de verification/tinh toan.
-- [ ] Co trinh bay SPD proof (symmetric + positive eigenvalues).
-- [ ] Co thay so Cholesky tung buoc va dien ma tran L.
+- [x] Co du 3 scene dung noi dung bat buoc.
+- [x] Co hien thi ly thuyet va cong thuc chinh xac.
+- [x] Co su dung numpy.linalg.cholesky trong source de verification.
+- [x] Co su dung numpy.linalg.eig trong source de verification/tinh toan.
+- [x] Co trinh bay SPD proof (symmetric + positive eigenvalues).
+- [x] Co thay so Cholesky tung buoc va dien ma tran L.
 - [ ] Co trinh bay eigenvalues, eigenvectors, D, P va P^{-1}.
 - [ ] Co lap rap va verify A = P D P^{-1}.
 - [ ] Xuat dung MP4 720p bang co -pqm.
