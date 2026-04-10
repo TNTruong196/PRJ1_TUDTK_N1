@@ -1,0 +1,5 @@
+# This file is used internally by FFMPEG.
+file 'file:C:/TranNhatTruong_2026/Toan Ung Dung/PRJ1/main/part2/media/videos/manim_scene/1080p60/partial_movie_files/Part2PipelinePreview/2257293077_3761057814_223132457.mp4'
+file 'file:C:/TranNhatTruong_2026/Toan Ung Dung/PRJ1/main/part2/media/videos/manim_scene/1080p60/partial_movie_files/Part2PipelinePreview/2135761390_570253431_3870459623.mp4'
+file 'file:C:/TranNhatTruong_2026/Toan Ung Dung/PRJ1/main/part2/media/videos/manim_scene/1080p60/partial_movie_files/Part2PipelinePreview/2135761390_3754416593_3716781312.mp4'
+file 'file:C:/TranNhatTruong_2026/Toan Ung Dung/PRJ1/main/part2/media/videos/manim_scene/1080p60/partial_movie_files/Part2PipelinePreview/2135761390_717689341_4053294628.mp4'
