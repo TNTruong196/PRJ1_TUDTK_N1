@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 import numpy as np
 from manim import (
+    config,
     DOWN,
     LEFT,
     RIGHT,
@@ -32,6 +33,11 @@ from manim import (
 DEFAULT_FONT = "Arial"
 TEXT_COLOR = WHITE
 EMPHASIS_COLOR = YELLOW
+
+# Default render profile for this project: 1080p60.
+config.pixel_width = 1920
+config.pixel_height = 1080
+config.frame_rate = 60
 
 
 # -----------------------------------------------------------------------------
@@ -136,11 +142,12 @@ class Scene1Introduction(Scene):
         matrix_group = VGroup(matrix_label, matrix_a).arrange(DOWN, aligned_edge=LEFT, buff=0.2)
         matrix_group.shift(LEFT * 3 + DOWN * 0.4)
 
-        task_text = Text("Goal: decompose A by Cholesky and Diagonalization", font=DEFAULT_FONT, color=TEXT_COLOR).scale(0.58)
-        formula_cholesky = Text("A = L L^T", font=DEFAULT_FONT, color=GREEN).scale(FORMULA_SCALE)
-        formula_diag = Text("A = P D P^-1", font=DEFAULT_FONT, color=GREEN).scale(FORMULA_SCALE)
-        formula_group = VGroup(task_text, formula_cholesky, formula_diag).arrange(DOWN, buff=0.35)
-        formula_group.shift(RIGHT * 2.5 + DOWN * 0.1)
+        task_text = Text("Goal: decompose A by Cholesky and Diagonalization", font=DEFAULT_FONT, color=TEXT_COLOR).scale(0.50)
+        formula_cholesky = Text("A = L * L^T", font=DEFAULT_FONT, color=GREEN).scale(FORMULA_SCALE)
+        formula_diag = Text("A = P * D * P^(-1)", font=DEFAULT_FONT, color=GREEN).scale(FORMULA_SCALE)
+        formula_group = VGroup(task_text, formula_cholesky, formula_diag).arrange(DOWN, buff=0.50)
+        formula_group.shift(RIGHT * 2.8 + DOWN * 0.2)
+        fit_to_width(formula_group, 6.2)
 
         self.play(Write(title))
         self.play(FadeIn(matrix_group, shift=UP * 0.2))
@@ -160,35 +167,41 @@ class Scene2SPDProof(Scene):
         self.play(FadeIn(mat))
 
         # C1: symmetry highlight A12 and A21
-        c1_text = Text("1) Symmetry: A[0][1] = A[1][0]", font=DEFAULT_FONT, color=TEXT_COLOR).scale(0.62)
-        c1_text.next_to(mat, DOWN, buff=0.5)
+        c1_text = Text("1) Symmetry: A[0][1] = A[1][0]", font=DEFAULT_FONT, color=TEXT_COLOR).scale(0.56)
+        c1_text.next_to(mat, DOWN, buff=0.7)
         self.play(Write(c1_text))
 
         matrix_cells = mat[1]
         a12 = SurroundingRectangle(matrix_cells[0][1], color=RED, stroke_width=2.5, buff=0.08)
         a21 = SurroundingRectangle(matrix_cells[1][0], color=RED, stroke_width=2.5, buff=0.08)
         equal_mark = Text("=", font=DEFAULT_FONT, color=GREEN).scale(1.0)
-        equal_mark.move_to((a12.get_center() + a21.get_center()) / 2 + RIGHT * 0.75)
+        equal_mark.move_to((a12.get_center() + a21.get_center()) / 2)
 
         self.play(FadeIn(a12), FadeIn(a21), Write(equal_mark))
         self.wait(1)
 
         # C2: positive eigenvalues with numpy.linalg.eig
         eigvals = np.linalg.eig(A)[0]
-        eig_text_title = Text("2) Positive definiteness via eigenvalues:", font=DEFAULT_FONT, color=TEXT_COLOR).scale(0.62)
-        eig_text_title.shift(RIGHT * 2.5 + UP * 0.6)
+        eig_text_title = Text("2) Positive eigenvalues:", font=DEFAULT_FONT, color=TEXT_COLOR).scale(0.56)
+        eig_text_title.shift(RIGHT * 1.8 + UP * 1.0)
 
         eig_lines = VGroup(
             *[
-                Text(f"λ{i+1} = {fmt_num(float(v), 2)} > 0", font=DEFAULT_FONT, color=TEXT_COLOR).scale(0.56)
+                Text(f"lambda_{i+1} = {fmt_num(float(v), 2)} > 0", font=DEFAULT_FONT, color=TEXT_COLOR).scale(0.48)
                 for i, v in enumerate(eigvals)
             ]
-        ).arrange(DOWN, aligned_edge=LEFT, buff=0.2)
-        eig_lines.next_to(eig_text_title, DOWN, aligned_edge=LEFT, buff=0.2)
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.25)
+        eig_lines.next_to(eig_text_title, DOWN, aligned_edge=LEFT, buff=0.3)
 
-        conclude = Text("Conclusion: A is SPD", font=DEFAULT_FONT, color=EMPHASIS_COLOR).scale(0.62)
-        conclude.next_to(eig_lines, DOWN, aligned_edge=LEFT, buff=0.35)
+        conclude = Text("Conclusion: A is SPD (symmetric + positive eigenvalues)", font=DEFAULT_FONT, color=EMPHASIS_COLOR).scale(0.45)
+        conclude.next_to(eig_lines, DOWN, aligned_edge=LEFT, buff=0.4)
 
+        right_group = VGroup(eig_text_title, eig_lines, conclude)
+        fit_to_width(right_group, 5.8)
+
+        self.play(FadeIn(mat), FadeIn(c1_text))
+        self.play(FadeIn(a12), FadeIn(a21), Write(equal_mark))
+        self.wait(0.8)
         self.play(Write(eig_text_title))
         self.play(AnimationGroup(*[Write(line) for line in eig_lines], lag_ratio=0.2))
         self.play(Write(conclude))
@@ -210,27 +223,30 @@ class Scene2CholeskyProcess(Scene):
 
         group = VGroup(mat_a, Text("=", font=DEFAULT_FONT, color=GREEN).scale(0.7), mat_l, Text("L^T", font=DEFAULT_FONT, color=TEXT_COLOR).scale(0.5))
         group.arrange(RIGHT, buff=0.5)
-        group.shift(UP * 0.7)
+        group.shift(UP * 1.2)
 
         self.play(FadeIn(group))
 
         generic_formula = Text(
-            "l_jj = sqrt(a_jj - Σl_jk²)  |  l_ij = (a_ij - Σl_ik*l_jk)/l_jj",
+            "l_jj = sqrt(a_jj - sum(l_jk^2))   l_ij = (a_ij - sum(l_ik*l_jk)) / l_jj",
             font=DEFAULT_FONT,
-            color=TEXT_COLOR
-        ).scale(0.54)
-        generic_formula.next_to(group, DOWN, buff=0.5)
+            color=TEXT_COLOR,
+        ).scale(0.38)
+        fit_to_width(generic_formula, 12.0)
+        generic_formula.next_to(group, DOWN, buff=0.8)
         self.play(Write(generic_formula))
 
         # D1 + D2: data-driven substitution steps
-        step_formula = Text("", font=DEFAULT_FONT, color=YELLOW).scale(0.52)
-        step_formula.next_to(generic_formula, DOWN, buff=0.3)
+        step_formula = Text("", font=DEFAULT_FONT, color=YELLOW).scale(0.42)
+        step_formula.next_to(generic_formula, DOWN, buff=0.75)
         self.add(step_formula)
 
         current_l = [["0", "0", "0"], ["0", "0", "0"], ["0", "0", "0"]]
         for step in cholesky_steps():
-            formula_text = step.formula_numeric.replace("\\sqrt", "sqrt").replace("\\frac", "(")
-            new_formula = Text(formula_text, font=DEFAULT_FONT, color=YELLOW).scale(0.48).move_to(step_formula)
+            formula_text = step.formula_numeric.replace("\\sqrt", "sqrt").replace("\\frac", "(").replace("\\sum", "sum")
+            new_formula = Text(formula_text, font=DEFAULT_FONT, color=YELLOW).scale(0.38)
+            fit_to_width(new_formula, 11.8)
+            new_formula.move_to(step_formula)
             self.play(Transform(step_formula, new_formula))
 
             i, j = step.matrix_pos
@@ -245,14 +261,14 @@ class Scene2CholeskyProcess(Scene):
         verify_ok = np.allclose(l_np, L)
 
         verify_text = Text(
-            f"Verification with numpy.linalg.cholesky: {'PASS' if verify_ok else 'FAIL'}",
+            f"Verification: {'PASS' if verify_ok else 'FAIL'}",
             font=DEFAULT_FONT,
-            color=GREEN if verify_ok else RED
-        ).scale(0.60)
-        verify_text.next_to(step_formula, DOWN, buff=0.35)
+            color=GREEN if verify_ok else RED,
+        ).scale(0.46)
+        verify_text.next_to(step_formula, DOWN, buff=1.2)
 
-        finish_formula = Text("L L^T = A", font=DEFAULT_FONT, color=GREEN).scale(0.68)
-        finish_formula.next_to(verify_text, DOWN, buff=0.2)
+        finish_formula = Text("L * L^T = A", font=DEFAULT_FONT, color=GREEN).scale(0.60)
+        finish_formula.next_to(verify_text, DOWN, buff=0.5)
 
         self.play(Write(verify_text))
         self.play(Write(finish_formula))
