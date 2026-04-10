@@ -2,7 +2,13 @@
 
 from __future__ import annotations
 
+import argparse
 from dataclasses import dataclass
+import os
+from pathlib import Path
+import shutil
+import subprocess
+import sys
 
 from manim import (
     config,
@@ -34,9 +40,11 @@ TEXT_COLOR = WHITE
 EMPHASIS_COLOR = YELLOW
 
 # Default render profile for this project: 1080p60.
-config.pixel_width = 1920
-config.pixel_height = 1080
-config.frame_rate = 60
+# Set PRJ1_MANIM_FORCE_DEFAULT_1080=0 to let CLI quality flags control output.
+if os.getenv("PRJ1_MANIM_FORCE_DEFAULT_1080", "1") == "1":
+    config.pixel_width = 1920
+    config.pixel_height = 1080
+    config.frame_rate = 60
 
 
 # Helper function for Cholesky decomposition (list-based)
@@ -180,6 +188,15 @@ def cholesky_steps() -> list[CholeskyStep]:
 TITLE_SCALE = 0.7
 FORMULA_SCALE = 0.65
 MATRIX_SCALE = 0.95
+
+FINAL_SCENES = [
+    "Scene1Introduction",
+    "Scene2SPDProof",
+    "Scene2CholeskyProcess",
+    "Scene3EigenData",
+    "Scene3DiagonalizationProcess",
+    "Scene4FinalRecap",
+]
 
 
 class Scene1Introduction(Scene):
@@ -527,6 +544,41 @@ class Part2PipelinePreview(Scene):
         self.wait(1.4)
 
 
+class Scene4FinalRecap(Scene):
+    """Phase H support scene to summarize key results and stabilize final duration."""
+
+    def construct(self) -> None:
+        title = Text("Final recap of Part 2", font=DEFAULT_FONT, color=EMPHASIS_COLOR).scale(0.74).to_edge(UP)
+        self.play(Write(title))
+
+        points = [
+            "1) A was verified as SPD: symmetric and positive eigenvalues.",
+            "2) Cholesky decomposition produced L with LL^T = A.",
+            "3) Eigenvalues and eigenvectors were extracted from A.",
+            "4) Matrices P, D, and P^-1 reconstructed A by PDP^-1.",
+            "5) Numerical verification passed with a small reconstruction error.",
+            "6) Pipeline Scene1 -> Scene2A -> Scene2B -> Scene3A -> Scene3B is complete.",
+        ]
+
+        bullet_group = VGroup()
+        for point in points:
+            line = Text(point, font=DEFAULT_FONT, color=TEXT_COLOR).scale(0.46)
+            fit_to_width(line, 12.5)
+            bullet_group.add(line)
+
+        bullet_group.arrange(DOWN, aligned_edge=LEFT, buff=0.22)
+        bullet_group.next_to(title, DOWN, buff=0.45).to_edge(LEFT, buff=0.6)
+
+        for line in bullet_group:
+            self.play(Write(line), run_time=0.7)
+            self.wait(5.0)
+
+        outro = Text("End of final video", font=DEFAULT_FONT, color=GREEN).scale(0.70)
+        outro.to_edge(DOWN)
+        self.play(Write(outro))
+        self.wait(6.0)
+
+
 class Part2Preview(Scene):
     """Optional stitch scene for quick local preview of A-B-C-D-E in one render."""
 
@@ -536,3 +588,138 @@ class Part2Preview(Scene):
         self.play(FadeIn(header, shift=UP * 0.2), FadeIn(sub, shift=UP * 0.2))
         self.wait(1)
         self.play(FadeOut(header), FadeOut(sub))
+
+
+def _run_cmd(cmd: list[str], cwd: Path) -> None:
+    env = dict(os.environ)
+    # Force CLI quality flags (e.g. -qm) to take effect when autorunning.
+    env["PRJ1_MANIM_FORCE_DEFAULT_1080"] = "0"
+    completed = subprocess.run(cmd, cwd=str(cwd), check=False, env=env)
+    if completed.returncode != 0:
+        raise RuntimeError(f"Command failed ({completed.returncode}): {' '.join(cmd)}")
+
+
+def _find_latest_scene_video(project_dir: Path, scene_name: str) -> Path:
+    root = project_dir / "media" / "videos" / "manim_scene"
+    matches = list(root.glob(f"*/{scene_name}.mp4"))
+    if not matches:
+        raise FileNotFoundError(f"Rendered scene file not found: {scene_name}")
+    matches.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+    return matches[0]
+
+
+def _resolve_ffmpeg() -> str:
+    ffmpeg = shutil.which("ffmpeg")
+    if ffmpeg:
+        return ffmpeg
+    try:
+        from imageio_ffmpeg import get_ffmpeg_exe
+
+        return get_ffmpeg_exe()
+    except Exception as exc:
+        raise RuntimeError("ffmpeg executable not found. Install ffmpeg or imageio-ffmpeg.") from exc
+
+
+def _get_video_info(video_path: Path) -> tuple[float, int, int, float]:
+    import av
+
+    with av.open(str(video_path)) as container:
+        stream = container.streams.video[0]
+        if container.duration is not None:
+            duration_seconds = float(container.duration) / 1_000_000.0
+        else:
+            duration_seconds = float(stream.duration * stream.time_base) if stream.duration is not None else 0.0
+        width = int(stream.width)
+        height = int(stream.height)
+        fps = float(stream.average_rate) if stream.average_rate is not None else 0.0
+    return duration_seconds, width, height, fps
+
+
+def _render_final_scenes(project_dir: Path, disable_caching: bool) -> list[Path]:
+    outputs: list[Path] = []
+    for scene in FINAL_SCENES:
+        print(f"[render] {scene}")
+        cmd = [
+            sys.executable,
+            "-m",
+            "manim",
+            "-qm",
+            "--resolution",
+            "1280,720",
+            "--fps",
+            "30",
+            "manim_scene.py",
+            scene,
+        ]
+        if disable_caching:
+            cmd.append("--disable_caching")
+        _run_cmd(cmd, cwd=project_dir)
+        outputs.append(_find_latest_scene_video(project_dir, scene))
+    return outputs
+
+
+def _concat_videos(project_dir: Path, inputs: list[Path], output_name: str) -> Path:
+    if not inputs:
+        raise ValueError("No scene videos to concatenate.")
+    output_dir = inputs[0].parent
+    list_path = output_dir / "concat_list.txt"
+    list_path.write_text("\n".join([f"file '{video.as_posix()}'" for video in inputs]) + "\n", encoding="utf-8")
+
+    output_video = output_dir / output_name
+    ffmpeg = _resolve_ffmpeg()
+    cmd = [
+        ffmpeg,
+        "-y",
+        "-f",
+        "concat",
+        "-safe",
+        "0",
+        "-i",
+        str(list_path),
+        "-c",
+        "copy",
+        str(output_video),
+    ]
+    _run_cmd(cmd, cwd=project_dir)
+    return output_video
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Run this file directly to render final Part 2 video (720p30) and concatenate scenes.",
+    )
+    parser.add_argument("--output-name", default="demo_video.mp4")
+    parser.add_argument("--disable-caching", action="store_true")
+    args = parser.parse_args()
+
+    project_dir = Path(__file__).resolve().parent
+    print("[1/4] Rendering final scenes...")
+    scene_outputs = _render_final_scenes(project_dir, disable_caching=args.disable_caching)
+
+    print("[2/4] Scene metadata:")
+    total_duration = 0.0
+    for scene_video in scene_outputs:
+        duration, width, height, fps = _get_video_info(scene_video)
+        total_duration += duration
+        print(f"  - {scene_video.name}: {duration:.2f}s | {width}x{height} | {fps:.2f}fps")
+    print(f"  Total (sum): {total_duration:.2f}s")
+
+    print("[3/4] Concatenating final video...")
+    final_video = _concat_videos(project_dir, scene_outputs, args.output_name)
+
+    print("[4/4] Final metadata:")
+    duration, width, height, fps = _get_video_info(final_video)
+    print(f"  - file: {final_video}")
+    print(f"  - duration: {duration:.2f}s")
+    print(f"  - resolution: {width}x{height}")
+    print(f"  - fps: {fps:.2f}")
+    if duration < 120.0 or duration > 1800.0:
+        print("  Duration check: FAIL (must be between 120s and 1800s)")
+        return 2
+
+    print("  Duration check: PASS")
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
