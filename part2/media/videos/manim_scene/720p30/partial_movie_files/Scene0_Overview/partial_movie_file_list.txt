@@ -1,6 +1,0 @@
-# This file is used internally by FFMPEG.
-file 'file:C:/TranNhatTruong_2026/Toan Ung Dung/PRJ1/main/part2/media/videos/manim_scene/720p30/partial_movie_files/Scene0_Overview/1987512680_1637359211_223132457.mp4'
-file 'file:C:/TranNhatTruong_2026/Toan Ung Dung/PRJ1/main/part2/media/videos/manim_scene/720p30/partial_movie_files/Scene0_Overview/2538612922_3917778599_2234537906.mp4'
-file 'file:C:/TranNhatTruong_2026/Toan Ung Dung/PRJ1/main/part2/media/videos/manim_scene/720p30/partial_movie_files/Scene0_Overview/2538612922_147282372_3463859131.mp4'
-file 'file:C:/TranNhatTruong_2026/Toan Ung Dung/PRJ1/main/part2/media/videos/manim_scene/720p30/partial_movie_files/Scene0_Overview/2538612922_2705602817_2035859972.mp4'
-file 'file:C:/TranNhatTruong_2026/Toan Ung Dung/PRJ1/main/part2/media/videos/manim_scene/720p30/partial_movie_files/Scene0_Overview/2538612922_1754310298_2362046534.mp4'
