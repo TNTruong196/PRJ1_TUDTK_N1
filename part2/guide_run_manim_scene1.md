@@ -102,3 +102,14 @@ cd "c:\TranNhatTruong_2026\Toan Ung Dung\PRJ1\main"
 .\.venv\Scripts\Activate.ps1
 python part2/manim_scene1.py --quality m
 ```
+
+
+# Run with Phuc
+## Run each scene
+* python manim_scene.py --scene Scene1Introduction
+* python manim_scene.py --scene Scene2CholeskyProcess
+* python manim_scene.py --scene Scene3DiagonalizationProcess
+## Run scence with high quality
+* python manim_scene.py --scene Scene2CholeskyProcess --quality m
+# Run all scence
+* python manim_scene.py --quality m
