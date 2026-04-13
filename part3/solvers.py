@@ -182,6 +182,38 @@ class TestCholeskySolvers(unittest.TestCase):
         with self.assertRaises(ValueError):
             solve_via_gauss(self.A_dependent, self.b_dependent)
 
+def solve_gauss_seidel(A, b, tolerance=1e-10, max_iterations=1000):
+    """
+    Giải hệ phương trình tuyến tính Ax = b bằng phương pháp lặp Gauss-Seidel.
+    (Phiên bản thuần Python, không sử dụng thư viện ngoài)
+    """
+    n = len(A)
+    # 1. Khởi tạo vector nghiệm x ban đầu là mảng chứa n số 0.0
+    x = [0.0] * n
+    
+    for k in range(max_iterations):
+        # 2. Tạo bản sao của x để lưu lại kết quả của bước lặp trước đó
+        x_old = list(x)
+        
+        for i in range(n):
+            # Tính tổng các phần tử đã được cập nhật trong bước lặp hiện tại (k+1)
+            sum_new = sum(A[i][j] * x[j] for j in range(i))
+            # Tính tổng các phần tử chưa được cập nhật (đang ở bước k)
+            sum_old = sum(A[i][j] * x_old[j] for j in range(i + 1, n))
+            
+            # Cập nhật x[i]
+            x[i] = (b[i] - sum_new - sum_old) / A[i][i]
+            
+        # 3. Kiểm tra điều kiện hội tụ (sai số tuyệt đối lớn nhất - chuẩn vô cùng)
+        # Thay thế cho np.linalg.norm(x - x_old, ord=np.inf)
+        max_diff = max(abs(x[idx] - x_old[idx]) for idx in range(n))
+        
+        if max_diff < tolerance:
+            print(f"[Gauss-Seidel] Đã hội tụ sau {k+1} vòng lặp.")
+            return x
+            
+    print("[Gauss-Seidel] Cảnh báo: Vượt quá số vòng lặp tối đa mà chưa hội tụ.")
+    return x
 
 if __name__ == "__main__":
     unittest.main(argv=["first-arg-is-ignored"], exit=False)

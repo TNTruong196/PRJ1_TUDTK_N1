@@ -11,8 +11,8 @@ Phương pháp Gauss-Seidel là một phương pháp lặp để giải hệ ph�
 $$x_i^{(k+1)} = \frac{1}{a_{ii}} \left( b_i - \sum_{j=1}^{i-1} a_{ij} x_j^{(k+1)} - \sum_{j=i+1}^{n} a_{ij} x_j^{(k)} \right)$$
 
 **Triển khai thực tế:**
-- Thuật toán được nhóm lập trình hoàn toàn bằng Python.
-- **Điều kiện hội tụ:** Sử dụng chuẩn vô cùng (infinity norm) để kiểm tra độ chênh lệch giữa vector nghiệm ở hai bước lặp liên tiếp. Vòng lặp dừng lại khi $\max |x^{(k+1)}_i - x^{(k)}_i| < \text{tolerance}$ (mặc định $10^{-10}$).
+- Thuật toán được nhóm lập trình **thuần bằng Python (Pure Python)**, hoàn toàn không phụ thuộc vào bất kỳ thư viện toán học nào (kể cả trong việc khởi tạo mảng hay tính chuẩn sai số). Điều này giúp nhóm bám sát và thể hiện rõ việc nắm vững bản chất toán học của từng vòng lặp trong thuật toán.
+- **Điều kiện hội tụ:** Sử dụng chuẩn vô cùng (infinity norm) để kiểm tra độ chênh lệch lớn nhất giữa vector nghiệm ở hai bước lặp liên tiếp. Vòng lặp dừng lại khi $\max |x^{(k+1)}_i - x^{(k)}_i| < \text{tolerance}$ (mặc định $10^{-10}$).
 - Hàm được trang bị tham số `max_iterations` để chủ động dừng chương trình và cảnh báo nếu hệ phương trình quá xấu, không thể hội tụ.
 
 ## 2. Thiết lập kịch bản Benchmark
