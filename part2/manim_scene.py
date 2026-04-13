@@ -306,16 +306,15 @@ class Scene1_Cholesky_IntroAndSPD(BaseMathScene):
         self.show_spd_proof()
 
     def show_goal_and_warning(self):
-        # SỬA LỖI 1: Tách riêng Text tiếng Việt và MathTex
-        title = Text("Mục tiêu của bài toán", color=GREEN, font_size=36, weight="BOLD").to_edge(UP, buff=0.8)
+        # Đã bỏ weight="BOLD" để sửa lỗi font ô vuông tiếng Việt
+        title = Text("Mục tiêu của bài toán", color=GREEN, font_size=36).to_edge(UP, buff=0.8)
         formula = MathTex(r"A = L \cdot L^T", color=GREEN).scale(1.8).next_to(title, DOWN, buff=0.8)
         
         warning_text = Text(
             "ĐIỀU KIỆN ÁP DỤNG: Ma trận A phải là SPD\n(Symmetric Positive Definite)",
             color=RED,
             font_size=26,
-            weight="BOLD",
-            t2c={"(Symmetric Positive Definite)": YELLOW} # Đổi màu dòng phụ chú
+            t2c={"(Symmetric Positive Definite)": YELLOW} 
         )
         warning_box = SurroundingRectangle(warning_text, color=RED, buff=0.3, stroke_width=4)
         warning_group = VGroup(warning_box, warning_text).move_to(DOWN * 1.5)
@@ -323,7 +322,6 @@ class Scene1_Cholesky_IntroAndSPD(BaseMathScene):
         self.play(Write(title), FadeIn(formula, shift=UP*0.2), run_time=self.TIME_NORMAL)
         self.wait(self.WAIT_SHORT)
         
-        # Hiệu ứng cảnh báo nhấp nháy mượt hơn
         self.play(FadeIn(warning_group, scale=1.1), run_time=self.TIME_FAST)
         self.play(Indicate(warning_box, color=YELLOW, scale_factor=1.05), run_time=self.TIME_NORMAL)
         self.wait(self.WAIT_SHORT)
@@ -331,16 +329,15 @@ class Scene1_Cholesky_IntroAndSPD(BaseMathScene):
         self.play(FadeOut(title), FadeOut(formula), FadeOut(warning_group), run_time=self.TIME_FAST)
 
     def show_spd_proof(self):
-        # --- BƯỚC 1: KIỂM TRA TÍNH ĐỐI XỨNG ---
-        title1 = Text("1. Tính đối xứng (Symmetric)", color=YELLOW, font_size=32, weight="BOLD").to_edge(UP, buff=0.5)
+        # Đã bỏ weight="BOLD"
+        title1 = Text("1. Tính đối xứng (Symmetric)", color=YELLOW, font_size=32).to_edge(UP, buff=0.5)
         self.play(Write(title1), run_time=self.TIME_NORMAL)
 
         matrix_a = Matrix(self.to_manim_str_matrix(self.A), element_to_mobject=lambda value: MathTex(value)).scale(0.8)
         label_a = MathTex("A", color=ORANGE).next_to(matrix_a, UP)
-        matrix_group = VGroup(label_a, matrix_a).move_to(LEFT * 3.0 + DOWN * 0.2) # Hạ thấp xuống để thoáng
+        matrix_group = VGroup(label_a, matrix_a).move_to(LEFT * 3.0 + DOWN * 0.2) 
         self.play(FadeIn(matrix_group), run_time=self.TIME_NORMAL)
 
-        # FIX TỌA ĐỘ: Gom label_at và matrix_at thành group và move_to cùng tọa độ Y (-0.2) với matrix_group để cân bằng hoàn hảo
         matrix_at = Matrix(self.to_manim_str_matrix(self.A), element_to_mobject=lambda value: MathTex(value)).scale(0.8)
         label_at = MathTex("A^T", color=BLUE).next_to(matrix_at, UP)
         matrix_at_group = VGroup(label_at, matrix_at).move_to(RIGHT * 3.0 + DOWN * 0.2)
@@ -354,38 +351,31 @@ class Scene1_Cholesky_IntroAndSPD(BaseMathScene):
         self.play(Write(sym_result), run_time=self.TIME_NORMAL)
         self.wait(self.WAIT_SHORT)
         
-        # Dọn dẹp màn hình bên phải
         self.play(FadeOut(matrix_at), FadeOut(label_at), FadeOut(sym_result), run_time=self.TIME_FAST)
 
         # --- BƯỚC 2: TIÊU CHUẨN SYLVESTER ---
-        # SỬA LỖI 2: Dùng Transform để đổi tiêu đề, tránh đè chữ
-        title2 = Text("2. Tiêu chuẩn Sylvester (Định thức con > 0)", color=YELLOW, font_size=32, weight="BOLD").to_edge(UP, buff=0.5)
+        title2 = Text("2. Tiêu chuẩn Sylvester (Định thức con > 0)", color=YELLOW, font_size=32).to_edge(UP, buff=0.5)
         self.play(Transform(title1, title2), run_time=self.TIME_NORMAL)
 
-        # SỬA LỖI 3: Dời ma trận A sang lề trái hoàn toàn, hạ thấp xuống để không đụng tiêu đề
-        self.play(matrix_group.animate.scale(0.95).move_to(LEFT * 3.5 + DOWN * 0.5), run_time=self.TIME_NORMAL)
+        # FIX BỐ CỤC: Ép ma trận A nhỏ lại 1 chút và dời hẳn xuống dưới cùng bên trái để né chữ
+        self.play(matrix_group.animate.scale(0.85).move_to(LEFT * 3.5 + DOWN * 0.8), run_time=self.TIME_NORMAL)
 
         entries = matrix_a.get_entries()
         
-        # Tính Delta 1
         box1 = SurroundingRectangle(entries[0], color=RED, buff=0.1)
         delta1 = MathTex(r"\Delta_1 = \det([4]) = 4 > 0", color=RED).scale(0.85).move_to(RIGHT * 2.5 + UP * 1.5)
         self.play(Create(box1), Write(delta1), run_time=self.TIME_NORMAL)
         self.wait(self.WAIT_SHORT)
 
-        # Tính Delta 2
         box2 = SurroundingRectangle(VGroup(entries[0], entries[1], entries[3], entries[4]), color=PURPLE, buff=0.1)
         delta2 = MathTex(r"\Delta_2 = 4(37) - 12(12) = 4 > 0", color=PURPLE).scale(0.85).next_to(delta1, DOWN, buff=0.8).align_to(delta1, LEFT)
         self.play(Transform(box1, box2), Write(delta2), run_time=self.TIME_NORMAL)
         self.wait(self.WAIT_SHORT)
 
-        # Dọn dẹp Delta 1, 2 để nhường chỗ cho Delta 3 (vì công thức rất dài)
         self.play(FadeOut(delta1), FadeOut(delta2), run_time=self.TIME_FAST)
         
-        # Tính Delta 3
         box3 = SurroundingRectangle(VGroup(*entries), color=YELLOW, buff=0.1)
         
-        # SỬA LỖI 4: Bẻ công thức Delta 3 thành nhiều dòng bằng VGroup để không bị tràn lề phải
         d3_line1 = MathTex(r"\Delta_3 = 4(37 \cdot 98 - (-43)^2)", color=YELLOW)
         d3_line2 = MathTex(r"- 12(12 \cdot 98 - (-16)(-43))", color=YELLOW)
         d3_line3 = MathTex(r"- 16(12 \cdot (-43) - 37(-16))", color=YELLOW)
@@ -394,31 +384,28 @@ class Scene1_Cholesky_IntroAndSPD(BaseMathScene):
         
         delta3_group = VGroup(d3_line1, d3_line2, d3_line3, d3_line4, d3_line5)
         delta3_group.arrange(DOWN, aligned_edge=LEFT, buff=0.25).scale(0.75)
-        delta3_group.move_to(RIGHT * 2.5 + DOWN * 0.2) # Đặt ở nửa bên phải màn hình
+        delta3_group.move_to(RIGHT * 2.5 + DOWN * 0.2) 
 
         self.play(Transform(box1, box3), run_time=self.TIME_NORMAL)
         
-        # Vẽ tuần tự từng dòng công thức
         self.play(Write(VGroup(d3_line1, d3_line2, d3_line3)), run_time=self.TIME_SLOW)
         self.wait(1.0)
         self.play(Write(VGroup(d3_line4, d3_line5)), run_time=self.TIME_NORMAL)
         self.wait(self.WAIT_SHORT)
 
-        # Đóng dấu PASSED lên thẳng vị trí của ma trận
-        stamp = Text("PASSED", color=GREEN, font_size=60, weight="BOLD")
+        stamp = Text("PASSED", color=GREEN, font_size=60) # Đã bỏ weight="BOLD"
         stamp.rotate(20 * PI / 180).move_to(matrix_a.get_center())
         
-        # Khung viền cho con dấu
         stamp_box = SurroundingRectangle(stamp, color=GREEN, buff=0.2, stroke_width=6)
         stamp_group = VGroup(stamp_box, stamp)
         
         self.play(FadeIn(stamp_group, scale=2.5), run_time=self.TIME_NORMAL)
-        self.wait(self.WAIT_LONG) # Dừng lâu hơn để khán giả xem kết quả cuối cùng
+        self.wait(self.WAIT_LONG) 
         
         self.clear()
 
 
-from manim import Line # Thêm import Line ở đầu file nếu chưa có
+from manim import Line
 
 class Scene2_Cholesky_Calculation(BaseMathScene):
     def construct(self):
@@ -432,25 +419,21 @@ class Scene2_Cholesky_Calculation(BaseMathScene):
         self.show_cost_bar_chart()
 
     def calculate_l_step_by_step(self):
-        title = self.make_section_title("Tính toán từng phần tử của L", YELLOW, 34).to_edge(UP, buff=0.4)
+        title = Text("Tính toán từng phần tử của L", color=YELLOW, font_size=34).to_edge(UP, buff=0.4)
 
-        # Đẩy ma trận lên cao hơn (UP * 1.2) để tạo không gian
         matrix_a = Matrix(self.to_manim_str_matrix(self.A), element_to_mobject=lambda value: MathTex(value)).scale(0.75).move_to(LEFT * 3.5 + UP * 1.2)
         label_a = MathTex("A", color=ORANGE).scale(0.9).next_to(matrix_a, UP)
         
-        # Làm mờ (opacity=0.3) các số 0 ở nửa trên của L để nhấn mạnh nó là tam giác dưới
         l_initial = [["0", "0", "0"], ["0", "0", "0"], ["0", "0", "0"]]
         matrix_l = Matrix(l_initial, element_to_mobject=lambda value: MathTex(value)).scale(0.75).move_to(RIGHT * 3.5 + UP * 1.2)
         label_l = MathTex("L", color=GREEN).scale(0.9).next_to(matrix_l, UP)
         
         for i, entry in enumerate(matrix_l.get_entries()):
-            if i in [1, 2, 5]: # Vị trí nửa trên đường chéo
+            if i in [1, 2, 5]: 
                 entry.set_opacity(0.3)
 
-        # Thêm một đường kẻ ngang phân cách khu vực ma trận và khu vực công thức
         divider = Line(LEFT * 6, RIGHT * 6, color=BLUE, stroke_opacity=0.5).move_to(DOWN * 0.4)
 
-        # Căn lề trái cho công thức tổng quát và đặt ở nửa dưới bên trái
         recurrence = VGroup(
             MathTex(r"L_{jj} = \sqrt{A_{jj} - \sum_{k<j}L_{jk}^2}", color=WHITE),
             MathTex(r"L_{ij} = \frac{A_{ij} - \sum_{k<j}L_{ik}L_{jk}}{L_{jj}}", color=WHITE),
@@ -466,15 +449,25 @@ class Scene2_Cholesky_Calculation(BaseMathScene):
         )
 
         steps = [
-            {"formula": r"L_{11}=\sqrt{4}=2", "value": "2", "target": (1, 1), "highlight": [(1, 1)]},
-            {"formula": r"L_{21}=\frac{12}{2}=6", "value": "6", "target": (2, 1), "highlight": [(2, 1), (1, 1)]},
-            {"formula": r"L_{31}=\frac{-16}{2}=-8", "value": "-8", "target": (3, 1), "highlight": [(3, 1), (1, 1)]},
-            {"formula": r"L_{22}=\sqrt{37-6^2}=1", "value": "1", "target": (2, 2), "highlight": [(2, 2), (2, 1)]},
-            {"formula": r"L_{32}=\frac{-43-(-8\cdot 6)}{1}=5", "value": "5", "target": (3, 2), "highlight": [(3, 2), (3, 1), (2, 1)]},
-            {"formula": r"L_{33}=\sqrt{98-((-8)^2+5^2)}=3", "value": "3", "target": (3, 3), "highlight": [(3, 3), (3, 1), (3, 2)]},
+            {"formula": r"L_{11}=\sqrt{4}=2", "value": "2", "target": (1, 1), 
+             "hl_A": [(1, 1)], "hl_L": []},
+            
+            {"formula": r"L_{21}=\frac{12}{2}=6", "value": "6", "target": (2, 1), 
+             "hl_A": [(2, 1)], "hl_L": [(1, 1)]},
+            
+            {"formula": r"L_{31}=\frac{-16}{2}=-8", "value": "-8", "target": (3, 1), 
+             "hl_A": [(3, 1)], "hl_L": [(1, 1)]},
+            
+            {"formula": r"L_{22}=\sqrt{37-6^2}=1", "value": "1", "target": (2, 2), 
+             "hl_A": [(2, 2)], "hl_L": [(2, 1)]},
+            
+            {"formula": r"L_{32}=\frac{-43-(-8\cdot 6)}{1}=5", "value": "5", "target": (3, 2), 
+             "hl_A": [(3, 2)], "hl_L": [(3, 1), (2, 1), (2, 2)]},
+            
+            {"formula": r"L_{33}=\sqrt{98-((-8)^2+5^2)}=3", "value": "3", "target": (3, 3), 
+             "hl_A": [(3, 3)], "hl_L": [(3, 1), (3, 2)]},
         ]
 
-        # Đặt hộp công thức đang tính ở nửa dưới bên phải
         formula_box = MathTex(steps[0]["formula"], color=YELLOW).scale(0.9).move_to(RIGHT * 3.0 + DOWN * 1.8)
         self.play(Write(formula_box), run_time=self.TIME_NORMAL)
 
@@ -482,32 +475,36 @@ class Scene2_Cholesky_Calculation(BaseMathScene):
             updated_formula = MathTex(step["formula"], color=YELLOW).scale(0.9).move_to(formula_box)
             self.play(Transform(formula_box, updated_formula), run_time=self.TIME_NORMAL)
 
-            highlights = [self.highlight_cell(matrix_a, row, col, ORANGE) for row, col in step["highlight"]]
-            self.play(*[FadeIn(box) for box in highlights], run_time=self.TIME_FAST)
+            hl_boxes_A = [self.highlight_cell(matrix_a, r, c, ORANGE) for r, c in step["hl_A"]]
+            hl_boxes_L = [self.highlight_cell(matrix_l, r, c, PURPLE) for r, c in step["hl_L"]]
+            highlights = hl_boxes_A + hl_boxes_L
+            
+            if highlights:
+                self.play(*[FadeIn(box) for box in highlights], run_time=self.TIME_FAST)
 
-            # Xử lý hiệu ứng bay số mượt mà
             row, col = step["target"]
             index = (row - 1) * 3 + (col - 1)
             target_entry = matrix_l.get_entries()[index]
             
             flying_value = MathTex(step["value"], color=GREEN).scale(0.8).move_to(formula_box).shift(UP * 0.6)
-            replacement = MathTex(step["value"], color=GREEN).scale(0.75).move_to(target_entry.get_center()) # Match kích thước
+            replacement = MathTex(step["value"], color=GREEN).scale(0.75).move_to(target_entry.get_center()) 
 
             self.play(FadeIn(flying_value, shift=UP * 0.2), run_time=self.TIME_FAST)
             
-            # Số bay vào đúng vị trí
             self.play(flying_value.animate.move_to(target_entry.get_center()), run_time=self.TIME_NORMAL)
             
-            # Ghi đè (become) để xóa sổ số 0 cũ mà không để lại bóng
             target_entry.become(replacement)
             
-            self.play(FadeOut(flying_value), *[FadeOut(box) for box in highlights], run_time=self.TIME_FAST)
+            if highlights:
+                self.play(FadeOut(flying_value), *[FadeOut(box) for box in highlights], run_time=self.TIME_FAST)
+            else:
+                self.play(FadeOut(flying_value), run_time=self.TIME_FAST)
 
         self.wait(self.WAIT_LONG)
         self.clear()
 
     def verify_cholesky_numpy(self):
-        title = self.make_section_title("Đối chiếu kết quả phân rã Cholesky", BLUE, 34).to_edge(UP, buff=0.6)
+        title = Text("Đối chiếu kết quả phân rã Cholesky", color=BLUE, font_size=34).to_edge(UP, buff=0.6)
         np_A = np.array(self.A)
         np_L = np.linalg.cholesky(np_A)
 
@@ -517,10 +514,10 @@ class Scene2_Cholesky_Calculation(BaseMathScene):
         manual_row = VGroup(Text("Tính toán thủ công:", color=WHITE, font_size=26), manual_group).arrange(RIGHT, buff=0.8)
         numpy_row = VGroup(Text("Thư viện Numpy:", color=WHITE, font_size=26), numpy_group).arrange(RIGHT, buff=0.8)
         
-        # Căn lề trái cho cả 2 hàng để trông như một cái bảng
-        comparison = VGroup(manual_row, numpy_row).arrange(DOWN, aligned_edge=LEFT, buff=1.0).move_to(UP * 0.1)
+        # FIX TRÀN VIỀN: Đẩy khối đối chiếu lên giữa màn hình và thu hẹp khoảng cách với dòng kết luận
+        comparison = VGroup(manual_row, numpy_row).arrange(DOWN, aligned_edge=LEFT, buff=0.6).move_to(UP * 0.4)
 
-        msg = Text("✓ Ma trận L khớp hoàn toàn với numpy.linalg.cholesky!", color=GREEN, font_size=28, weight="BOLD").next_to(comparison, DOWN, buff=1.2)
+        msg = Text("✓ Ma trận L khớp hoàn toàn với numpy.linalg.cholesky!", color=GREEN, font_size=26).next_to(comparison, DOWN, buff=0.8)
 
         self.play(Write(title), run_time=self.TIME_NORMAL)
         self.play(FadeIn(manual_row, shift=RIGHT * 0.2), run_time=self.TIME_NORMAL)
@@ -532,9 +529,8 @@ class Scene2_Cholesky_Calculation(BaseMathScene):
         self.clear()
 
     def show_cost_bar_chart(self):
-        title = self.make_section_title("Đánh giá chi phí tính toán", YELLOW, 34).to_edge(UP, buff=0.6)
+        title = Text("Đánh giá chi phí tính toán", color=YELLOW, font_size=34).to_edge(UP, buff=0.6)
         
-        # FIX LỖI TRÀN VIỀN: Thu nhỏ y_length và đưa biểu đồ lên cao hơn
         chart = BarChart(
             values=[2.0, 1.0],
             bar_names=["LU", "Cholesky"],
@@ -549,8 +545,7 @@ class Scene2_Cholesky_Calculation(BaseMathScene):
             MathTex(r"\text{Cholesky} \approx \frac{1}{3}n^3", color=GREEN),
         ).arrange(RIGHT, buff=1.5).next_to(chart, DOWN, buff=0.5)
         
-        # Kéo dòng kết luận gần lại với stats
-        conclusion = Text("Tiết kiệm xấp xỉ 50% khối lượng tính toán", color=YELLOW, font_size=30, weight="BOLD").next_to(stats, DOWN, buff=0.4)
+        conclusion = Text("Tiết kiệm xấp xỉ 50% khối lượng tính toán", color=YELLOW, font_size=30).next_to(stats, DOWN, buff=0.4)
 
         self.play(Write(title), FadeIn(chart), run_time=self.TIME_NORMAL)
         self.play(Write(stats), run_time=self.TIME_NORMAL)
