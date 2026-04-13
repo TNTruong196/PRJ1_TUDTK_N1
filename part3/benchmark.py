@@ -1,81 +1,145 @@
-import numpy as np
-import random
+import os
+import sys
 import time
+import random
+import math  # Thư viện chuẩn của Python, được phép dùng để tính căn bậc 2
 
-# --- 1. IMPORT THUẬT TOÁN GAUSS-SEIDEL ---
-from gauss_seidel import solve_gauss_seidel 
+# Thiết lập đường dẫn để import được từ các thư mục khác
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+if parent_dir not in sys.path:
+    sys.path.append(parent_dir)
 
-# --- 2. CÁC HÀM TẠO MA TRẬN (DỮ LIỆU TEST) ---
-def generate_hilbert(n):
-    """Tạo ma trận Hilbert (Số điều kiện lớn - Rất khó giải)"""
-    return np.array([[1.0 / (i + j + 1) for j in range(n)] for i in range(n)])
+from solvers import (
+    solve_via_gauss,
+    solve_via_cholesky,
+    solve_via_normal_equations,
+    solve_gauss_seidel
+)
 
-def generate_spd(n):
-    """Tạo ma trận Đối xứng Xác định dương (Số điều kiện nhỏ - Dễ giải)"""
-    M = np.array([[random.uniform(0, 1) for _ in range(n)] for _ in range(n)])
-    A = np.dot(M.T, M) # M^T * M
-    # Cộng thêm n*I vào đường chéo chính
-    np.fill_diagonal(A, A.diagonal() + n)
+# =====================================================================
+# 1. CÁC HÀM TOÁN HỌC THUẦN PYTHON (Thay thế Numpy)
+# =====================================================================
+def mat_vec_mult(A, x):
+    """Nhân ma trận A với vector x"""
+    n = len(A)
+    return [sum(A[i][j] * x[j] for j in range(n)) for i in range(n)]
+
+def vec_sub(u, v):
+    """Trừ hai vector u - v"""
+    return [u_i - v_i for u_i, v_i in zip(u, v)]
+
+def norm_2(v):
+    """Tính chuẩn 2 (Euclidean norm) của vector"""
+    return math.sqrt(sum(v_i**2 for v_i in v))
+
+def calc_relative_error(A, x_hat, b):
+    """Tính sai số tương đối: ||Ax_hat - b||_2 / ||b||_2"""
+    if x_hat is None: return float('inf')
+    Ax = mat_vec_mult(A, x_hat)
+    residual = vec_sub(Ax, b)
+    return norm_2(residual) / norm_2(b)
+
+# =====================================================================
+# 2. HAI HÀM SINH MA TRẬN DỮ LIỆU (THUẦN PYTHON)
+# =====================================================================
+def generate_spd_pure_python(n):
+    """Tạo ma trận SPD"""
+    M = [[random.uniform(0, 1) for _ in range(n)] for _ in range(n)]
+    A = [[0.0] * n for _ in range(n)]
+    for i in range(n):
+        for j in range(n):
+            for k in range(n):
+                A[i][j] += M[k][i] * M[k][j]
+    for i in range(n):
+        A[i][i] += n
     return A
 
-# --- 3. HÀM CHẠY BENCHMARK HOÀN CHỈNH ---
+def generate_hilbert_pure_python(n):
+    """Tạo ma trận Hilbert"""
+    return [[1.0 / (i + j + 1) for j in range(n)] for i in range(n)]
+
+# =====================================================================
+# 3. HÀM CHẠY BENCHMARK
+# =====================================================================
 def run_benchmark():
-    n = 100 # Kích thước ma trận (có thể đổi)
+    # Yêu cầu của đề bài: n in {50, 100, 200, 500, 1000}
+    # CẢNH BÁO: Vì code thuần Python, n=500 và n=1000 sẽ chạy khá lâu.
+    n_list = [50, 100, 200, 500] 
+    num_runs = 5
     
-    print(f"========== BẮT ĐẦU BENCHMARK HỆ PHƯƠNG TRÌNH {n}x{n} ==========\n")
+    methods = [
+        ("Khử Gauss", solve_via_gauss),
+        ("Phân rã Cholesky", solve_via_cholesky),
+        ("Hệ PT Chuẩn (Normal Eq)", solve_via_normal_equations),
+        ("Lặp Gauss-Seidel", solve_gauss_seidel)
+    ]
 
-    # ===========================================================
-    # Kịch bản 1: Test với ma trận "Đẹp" (SPD)
-    # ===========================================================
-    print(">>> KỊCH BẢN 1: Ma trận Đối xứng Xác định dương (SPD)")
-    A_spd = generate_spd(n)
-    b_spd = np.random.rand(n) 
+    print("========== BẮT ĐẦU BENCHMARK ==========\n")
 
-    # Ép kiểu sang list thuần Python để test chuẩn tốc độ code tự viết
-    A_spd_list = A_spd.tolist()
-    b_spd_list = b_spd.tolist()
+    for n in n_list:
+        print(f"\n[{'='*10} ĐANG XỬ LÝ KÍCH THƯỚC N = {n} {'='*10}]")
+        
+        # --- KỊCH BẢN 1: SPD ---
+        print(">>> Ma trận SPD (Well-conditioned)")
+        for name, func in methods:
+            total_time = 0.0
+            total_error = 0.0
+            success_runs = 0
+            
+            for _ in range(num_runs):
+                A = generate_spd_pure_python(n)
+                b = [random.uniform(0, 1) for _ in range(n)]
+                
+                # Copy để tránh thay đổi ma trận gốc
+                A_copy = [row[:] for row in A]
+                b_copy = b[:]
+                
+                start = time.time()
+                try:
+                    x_hat = func(A_copy, b_copy)
+                    total_time += (time.time() - start)
+                    total_error += calc_relative_error(A, x_hat, b)
+                    success_runs += 1
+                except Exception:
+                    pass
+            
+            if success_runs > 0:
+                avg_time = total_time / success_runs
+                avg_err = total_error / success_runs
+                print(f" - {name:25}: {avg_time:8.4f}s | Sai số: {avg_err:.2e}")
+            else:
+                print(f" - {name:25}: THẤT BẠI")
 
-    # Cách 1: Gauss-Seidel tự code
-    start = time.time()
-    x_gs_spd = solve_gauss_seidel(A_spd_list, b_spd_list)
-    time_gs_spd = time.time() - start
-    print(f" - Thời gian Gauss-Seidel: {time_gs_spd:.6f} s")
-
-    # Cách 2: Numpy Solve (Thư viện chuẩn)
-    start = time.time()
-    x_np_spd = np.linalg.solve(A_spd, b_spd)
-    time_np_spd = time.time() - start
-    print(f" - Thời gian Numpy Solve : {time_np_spd:.6f} s")
-    
-    # Chuyển x_gs_spd (list) thành mảng numpy trước khi tính sai số
-    error_spd = np.linalg.norm(np.array(x_gs_spd) - x_np_spd, ord=np.inf)
-    print(f" -> Sai số lớn nhất     : {error_spd:.2e}\n")
-
-    # ===========================================================
-    # Kịch bản 2: Test với ma trận "Ác mộng" (Hilbert)
-    # ===========================================================
-    print(">>> KỊCH BẢN 2: Ma trận Hilbert (Ill-conditioned)")
-    A_hilbert = generate_hilbert(n)
-    b_hilbert = np.random.rand(n)
-
-    A_hilb_list = A_hilbert.tolist()
-    b_hilb_list = b_hilbert.tolist()
-
-    # Cách 1: Gauss-Seidel tự code
-    start = time.time()
-    x_gs_hilb = solve_gauss_seidel(A_hilb_list, b_hilb_list, max_iterations=2000)
-    time_gs_hilb = time.time() - start
-    print(f" - Thời gian Gauss-Seidel: {time_gs_hilb:.6f} s")
-
-    # Cách 2: Numpy Solve (Thư viện chuẩn)
-    start = time.time()
-    x_np_hilb = np.linalg.solve(A_hilbert, b_hilbert)
-    time_np_hilb = time.time() - start
-    print(f" - Thời gian Numpy Solve : {time_np_hilb:.6f} s")
-
-    # Chuyển x_gs_hilb (list) thành mảng numpy trước khi tính sai số
-    error_hilb = np.linalg.norm(np.array(x_gs_hilb) - x_np_hilb, ord=np.inf)
-    print(f" -> Sai số lớn nhất     : {error_hilb:.2e}\n")
+        # --- KỊCH BẢN 2: HILBERT ---
+        print("\n>>> Ma trận Hilbert (Ill-conditioned)")
+        for name, func in methods:
+            total_time = 0.0
+            total_error = 0.0
+            success_runs = 0
+            
+            for _ in range(num_runs):
+                A = generate_hilbert_pure_python(n)
+                b = [random.uniform(0, 1) for _ in range(n)]
+                
+                A_copy = [row[:] for row in A]
+                b_copy = b[:]
+                
+                start = time.time()
+                try:
+                    x_hat = func(A_copy, b_copy)
+                    total_time += (time.time() - start)
+                    total_error += calc_relative_error(A, x_hat, b)
+                    success_runs += 1
+                except Exception:
+                    pass
+            
+            if success_runs > 0:
+                avg_time = total_time / success_runs
+                avg_err = total_error / success_runs
+                print(f" - {name:25}: {avg_time:8.4f}s | Sai số: {avg_err:.2e}")
+            else:
+                print(f" - {name:25}: THẤT BẠI (Lỗi suy biến/toán học)")
 
 if __name__ == "__main__":
     run_benchmark()
