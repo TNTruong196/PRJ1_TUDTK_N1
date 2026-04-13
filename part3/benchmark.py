@@ -24,14 +24,20 @@ def run_benchmark():
     
     print(f"========== BẮT ĐẦU BENCHMARK HỆ PHƯƠNG TRÌNH {n}x{n} ==========\n")
 
+    # ===========================================================
     # Kịch bản 1: Test với ma trận "Đẹp" (SPD)
+    # ===========================================================
     print(">>> KỊCH BẢN 1: Ma trận Đối xứng Xác định dương (SPD)")
     A_spd = generate_spd(n)
-    b_spd = np.random.rand(n) # Tạo vector b ngẫu nhiên
+    b_spd = np.random.rand(n) 
+
+    # Ép kiểu sang list thuần Python để test chuẩn tốc độ code tự viết
+    A_spd_list = A_spd.tolist()
+    b_spd_list = b_spd.tolist()
 
     # Cách 1: Gauss-Seidel tự code
     start = time.time()
-    x_gs_spd = solve_gauss_seidel(A_spd, b_spd)
+    x_gs_spd = solve_gauss_seidel(A_spd_list, b_spd_list)
     time_gs_spd = time.time() - start
     print(f" - Thời gian Gauss-Seidel: {time_gs_spd:.6f} s")
 
@@ -41,18 +47,23 @@ def run_benchmark():
     time_np_spd = time.time() - start
     print(f" - Thời gian Numpy Solve : {time_np_spd:.6f} s")
     
-    error_spd = np.linalg.norm(x_gs_spd - x_np_spd, ord=np.inf)
-    print(f" -> Sai số giữa 2 cách   : {error_spd:.2e}\n")
+    # Chuyển x_gs_spd (list) thành mảng numpy trước khi tính sai số
+    error_spd = np.linalg.norm(np.array(x_gs_spd) - x_np_spd, ord=np.inf)
+    print(f" -> Sai số lớn nhất     : {error_spd:.2e}\n")
 
-    # -----------------------------------------------------------
+    # ===========================================================
     # Kịch bản 2: Test với ma trận "Ác mộng" (Hilbert)
+    # ===========================================================
     print(">>> KỊCH BẢN 2: Ma trận Hilbert (Ill-conditioned)")
     A_hilbert = generate_hilbert(n)
     b_hilbert = np.random.rand(n)
 
+    A_hilb_list = A_hilbert.tolist()
+    b_hilb_list = b_hilbert.tolist()
+
     # Cách 1: Gauss-Seidel tự code
     start = time.time()
-    x_gs_hilb = solve_gauss_seidel(A_hilbert, b_hilbert, max_iterations=2000)
+    x_gs_hilb = solve_gauss_seidel(A_hilb_list, b_hilb_list, max_iterations=2000)
     time_gs_hilb = time.time() - start
     print(f" - Thời gian Gauss-Seidel: {time_gs_hilb:.6f} s")
 
@@ -62,8 +73,9 @@ def run_benchmark():
     time_np_hilb = time.time() - start
     print(f" - Thời gian Numpy Solve : {time_np_hilb:.6f} s")
 
-    error_hilb = np.linalg.norm(x_gs_hilb - x_np_hilb, ord=np.inf)
-    print(f" -> Sai số giữa 2 cách   : {error_hilb:.2e}\n")
+    # Chuyển x_gs_hilb (list) thành mảng numpy trước khi tính sai số
+    error_hilb = np.linalg.norm(np.array(x_gs_hilb) - x_np_hilb, ord=np.inf)
+    print(f" -> Sai số lớn nhất     : {error_hilb:.2e}\n")
 
 if __name__ == "__main__":
     run_benchmark()
