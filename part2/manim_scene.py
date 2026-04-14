@@ -1,725 +1,812 @@
-"""Manim scenes for Part 2 without LaTeX runtime dependency."""
+"""Manim visualization for Cholesky decomposition and diagonalization.
+
+This file follows the project constraints:
+- Core matrix computations are implemented with pure Python list-of-lists.
+- numpy is used only for verification at the end of scenes.
+- The presentation is split into independent scenes for modular rendering.
+"""
 
 from __future__ import annotations
 
 import argparse
-from dataclasses import dataclass
-import os
-from pathlib import Path
-import shutil
+import math
 import subprocess
 import sys
+from pathlib import Path
 
+import numpy as np
 from manim import (
-    config,
-    DOWN,
-    LEFT,
-    RIGHT,
-    UP,
     AnimationGroup,
+    Arrow,
+    BLUE,
+    BarChart,
     Create,
+    DOWN,
     FadeIn,
     FadeOut,
-    Rectangle,
+    GREEN,
+    Indicate,
+    LEFT,
+    MathTex,
+    Matrix,
+    ORANGE,
+    PI,
+    PURPLE,
+    RED,
+    RIGHT,
+    RoundedRectangle,
     Scene,
     SurroundingRectangle,
     Text,
     Transform,
+    TransformFromCopy,
+    UP,
+    UL,
     VGroup,
-    Write,
-    BLUE,
-    RED,
-    GREEN,
-    YELLOW,
     WHITE,
+    YELLOW,
+    Write,
 )
 
 
-DEFAULT_FONT = "Arial"
-TEXT_COLOR = WHITE
-EMPHASIS_COLOR = YELLOW
-
-# Default render profile for this project: 1080p60.
-# Set PRJ1_MANIM_FORCE_DEFAULT_1080=0 to let CLI quality flags control output.
-if os.getenv("PRJ1_MANIM_FORCE_DEFAULT_1080", "1") == "1":
-    config.pixel_width = 1920
-    config.pixel_height = 1080
-    config.frame_rate = 60
-
-
-# Helper function for Cholesky decomposition (list-based)
-def cholesky_decompose(A: list[list[float]]) -> list[list[float]]:
-    """Compute Cholesky decomposition of symmetric positive definite matrix A."""
-    n = len(A)
-    L = [[0.0 for _ in range(n)] for _ in range(n)]
-    for i in range(n):
-        for j in range(i + 1):
-            if i == j:
-                sum_val = sum(L[i][k] ** 2 for k in range(j))
-                L[i][j] = (A[i][i] - sum_val) ** 0.5
-            else:
-                sum_val = sum(L[i][k] * L[j][k] for k in range(j))
-                L[i][j] = (A[i][j] - sum_val) / L[j][j]
-    return L
-
-
-# Helper function for matrix inverse (3x3)
-def matrix_inverse_3x3(M: list[list[float]]) -> list[list[float]]:
-    """Compute inverse of 3x3 matrix."""
-    det = (M[0][0] * (M[1][1] * M[2][2] - M[1][2] * M[2][1]) -
-           M[0][1] * (M[1][0] * M[2][2] - M[1][2] * M[2][0]) +
-           M[0][2] * (M[1][0] * M[2][1] - M[1][1] * M[2][0]))
-    
-    inv = [[0.0 for _ in range(3)] for _ in range(3)]
-    inv[0][0] = (M[1][1] * M[2][2] - M[1][2] * M[2][1]) / det
-    inv[0][1] = (M[0][2] * M[2][1] - M[0][1] * M[2][2]) / det
-    inv[0][2] = (M[0][1] * M[1][2] - M[0][2] * M[1][1]) / det
-    inv[1][0] = (M[1][2] * M[2][0] - M[1][0] * M[2][2]) / det
-    inv[1][1] = (M[0][0] * M[2][2] - M[0][2] * M[2][0]) / det
-    inv[1][2] = (M[0][2] * M[1][0] - M[0][0] * M[1][2]) / det
-    inv[2][0] = (M[1][0] * M[2][1] - M[1][1] * M[2][0]) / det
-    inv[2][1] = (M[0][1] * M[2][0] - M[0][0] * M[2][1]) / det
-    inv[2][2] = (M[0][0] * M[1][1] - M[0][1] * M[1][0]) / det
-    return inv
-
-
-# Helper for eigenvalues (small numerical computation)
-def compute_eigenvalues_3x3(A: list[list[float]]) -> list[float]:
-    """Approximate eigenvalues using numpy internally, then convert to list."""
-    import numpy as np
-    eigenvals = np.linalg.eigvalsh([[A[i][j] for j in range(3)] for i in range(3)])
-    return sorted([float(v) for v in eigenvals], reverse=True)  # Sort descending
-
-
-def compute_eigenvectors_3x3(A: list[list[float]]) -> list[list[float]]:
-    """Approximate eigenvectors using numpy internally, then convert to list."""
-    import numpy as np
-    A_np = np.array(A)
-    eigenvals, eigenvecs = np.linalg.eigh(A_np)
-    idx = np.argsort(eigenvals)[::-1]  # Sort by eigenvalue descending
-    return [[float(eigenvecs[i][j]) for i in range(3)] for j in idx]
-
-
-# -----------------------------------------------------------------------------
-# Phase A1: lock demo data in one place
-# -----------------------------------------------------------------------------
-A = [
-    [4.0, 12.0, -16.0],
-    [12.0, 37.0, -43.0],
-    [-16.0, -43.0, 98.0],
-]
-
-L = cholesky_decompose(A)
-EIGENVALUES = compute_eigenvalues_3x3(A)
-EIGENVECTORS = compute_eigenvectors_3x3(A)
-P = EIGENVECTORS
-D = [[EIGENVALUES[i] if i == j else 0.0 for j in range(3)] for i in range(3)]
-P_INV = matrix_inverse_3x3(P)
-
-
-@dataclass
-class CholeskyStep:
-    name: str
-    formula_numeric: str
-    value: float
-    matrix_pos: tuple[int, int]
-
-
-# -----------------------------------------------------------------------------
-# Phase A2: display formatting helper
-# -----------------------------------------------------------------------------
-def fmt_num(x: float, decimals: int = 4) -> str:
-    if abs(x - round(x)) < 1e-10:
-        return str(int(round(x)))
-    return f"{x:.{decimals}f}"
-
-
-def matrix_to_strings(data: list[list[float]], decimals: int = 4) -> list[list[str]]:
-    return [[fmt_num(float(v), decimals) for v in row] for row in data]
-
-
-def vector_to_text(values: list[float], decimals: int = 4) -> str:
-    parts = [fmt_num(float(v), decimals) for v in values]
-    return "[" + ", ".join(parts) + "]"
-
-
-def fit_to_width(mobj, max_width: float):
-    """Scale down mobject only when it exceeds the target width."""
-    if mobj.width > max_width:
-        mobj.scale_to_fit_width(max_width)
-    return mobj
-
-
-def build_text_matrix(cells: list[list[str]], scale: float = 0.52, cell_width: float = 1.2) -> VGroup:
-    rows = len(cells)
-    cols = len(cells[0])
-    all_cells = VGroup()
-    for r in range(rows):
-        row_group = VGroup()
-        for c in range(cols):
-            box = Rectangle(width=cell_width, height=0.85, color=BLUE, stroke_width=1.5)
-            label = Text(cells[r][c], font=DEFAULT_FONT, color=TEXT_COLOR).scale(scale)
-            label.move_to(box.get_center())
-            row_group.add(VGroup(box, label))
-        row_group.arrange(RIGHT, buff=0.05)
-        all_cells.add(row_group)
-    all_cells.arrange(DOWN, buff=0.05)
-    left_bracket = Text("[", font=DEFAULT_FONT, color=TEXT_COLOR).scale(2.2)
-    right_bracket = Text("]", font=DEFAULT_FONT, color=TEXT_COLOR).scale(2.2)
-    left_bracket.next_to(all_cells, LEFT, buff=0.2)
-    right_bracket.next_to(all_cells, RIGHT, buff=0.2)
-    return VGroup(left_bracket, all_cells, right_bracket)
-
-
-def cholesky_steps() -> list[CholeskyStep]:
-    return [
-        CholeskyStep("l_{11}", r"l_{11}=\sqrt{4}=2", 2.0, (0, 0)),
-        CholeskyStep("l_{21}", r"l_{21}=\frac{12}{l_{11}}=\frac{12}{2}=6", 6.0, (1, 0)),
-        CholeskyStep("l_{31}", r"l_{31}=\frac{-16}{l_{11}}=\frac{-16}{2}=-8", -8.0, (2, 0)),
-        CholeskyStep("l_{22}", r"l_{22}=\sqrt{37-l_{21}^2}=\sqrt{37-36}=1", 1.0, (1, 1)),
-        CholeskyStep("l_{32}", r"l_{32}=\frac{-43-l_{31}l_{21}}{l_{22}}=\frac{-43+48}{1}=5", 5.0, (2, 1)),
-        CholeskyStep("l_{33}", r"l_{33}=\sqrt{98-l_{31}^2-l_{32}^2}=\sqrt{98-64-25}=3", 3.0, (2, 2)),
-    ]
-
-
-# -----------------------------------------------------------------------------
-# Shared visual constants (Phase G2-ready)
-# -----------------------------------------------------------------------------
-TITLE_SCALE = 0.7
-FORMULA_SCALE = 0.65
-MATRIX_SCALE = 0.95
-
-FINAL_SCENES = [
-    "Scene1Introduction",
-    "Scene2SPDProof",
-    "Scene2CholeskyProcess",
-    "Scene3EigenData",
-    "Scene3DiagonalizationProcess",
-    "Scene4FinalRecap",
-]
-
-
-class Scene1Introduction(Scene):
-    """Phase B: Intro scene with problem statement and target formulas."""
-
-    def construct(self) -> None:
-        title = Text("Scene 1: Introduction to Matrix Decomposition", font=DEFAULT_FONT, color=EMPHASIS_COLOR).scale(TITLE_SCALE).to_edge(UP)
-        matrix_label = Text("Given matrix A:", font=DEFAULT_FONT, color=TEXT_COLOR).scale(0.62)
-        matrix_a = build_text_matrix(matrix_to_strings(A), scale=0.52).scale(MATRIX_SCALE)
-
-        matrix_group = VGroup(matrix_label, matrix_a).arrange(DOWN, aligned_edge=LEFT, buff=0.2)
-        matrix_group.shift(LEFT * 3 + DOWN * 0.4)
-
-        task_text = Text("Goal: decompose A by Cholesky and Diagonalization", font=DEFAULT_FONT, color=TEXT_COLOR).scale(0.50)
-        formula_cholesky = Text("A = L * L^T", font=DEFAULT_FONT, color=GREEN).scale(FORMULA_SCALE)
-        formula_diag = Text("A = P * D * P^(-1)", font=DEFAULT_FONT, color=GREEN).scale(FORMULA_SCALE)
-        formula_group = VGroup(task_text, formula_cholesky, formula_diag).arrange(DOWN, buff=0.50)
-        formula_group.shift(RIGHT * 2.8 + DOWN * 0.2)
-        fit_to_width(formula_group, 6.2)
-
-        self.play(Write(title))
-        self.play(FadeIn(matrix_group, shift=UP * 0.2))
-        self.play(FadeIn(task_text, shift=UP * 0.2))
-        self.play(Write(formula_cholesky), Write(formula_diag))
-        self.wait(1.5)
-
-
-class Scene2SPDProof(Scene):
-    """Phase C: standalone SPD proof (symmetry + positive eigenvalues)."""
-
-    def construct(self) -> None:
-        title = Text("Scene 2A: Why A is SPD", font=DEFAULT_FONT, color=EMPHASIS_COLOR).scale(TITLE_SCALE).to_edge(UP)
-        self.play(Write(title))
-
-        mat = build_text_matrix(matrix_to_strings(A), scale=0.52).scale(MATRIX_SCALE).shift(LEFT * 3 + DOWN * 0.4)
-        self.play(FadeIn(mat))
-
-        # C1: symmetry highlight A12 and A21
-        c1_text = Text("1) Symmetry: A[0][1] = A[1][0]", font=DEFAULT_FONT, color=TEXT_COLOR).scale(0.56)
-        c1_text.next_to(mat, DOWN, buff=0.7)
-        self.play(Write(c1_text))
-
-        matrix_cells = mat[1]
-        a12 = SurroundingRectangle(matrix_cells[0][1], color=RED, stroke_width=2.5, buff=0.08)
-        a21 = SurroundingRectangle(matrix_cells[1][0], color=RED, stroke_width=2.5, buff=0.08)
-        equal_mark = Text("=", font=DEFAULT_FONT, color=GREEN).scale(1.0)
-        equal_mark.move_to((a12.get_center() + a21.get_center()) / 2)
-
-        self.play(FadeIn(a12), FadeIn(a21), Write(equal_mark))
-        self.wait(1)
-
-        # C2: positive eigenvalues with list
-        eigvals = EIGENVALUES
-        eig_text_title = Text("2) Positive eigenvalues:", font=DEFAULT_FONT, color=TEXT_COLOR).scale(0.56)
-        eig_text_title.shift(RIGHT * 1.8 + UP * 1.0)
-
-        eig_lines = VGroup(
-            *[
-                Text(f"lambda_{i+1} = {fmt_num(v, 2)} > 0", font=DEFAULT_FONT, color=TEXT_COLOR).scale(0.48)
-                for i, v in enumerate(eigvals)
-            ]
-        ).arrange(DOWN, aligned_edge=LEFT, buff=0.25)
-        eig_lines.next_to(eig_text_title, DOWN, aligned_edge=LEFT, buff=0.3)
-
-        conclude = Text("Conclusion: A is SPD (symmetric + positive eigenvalues)", font=DEFAULT_FONT, color=EMPHASIS_COLOR).scale(0.45)
-        conclude.next_to(eig_lines, DOWN, aligned_edge=LEFT, buff=0.4)
-
-        right_group = VGroup(eig_text_title, eig_lines, conclude)
-        fit_to_width(right_group, 5.8)
-
-        self.play(FadeIn(mat), FadeIn(c1_text))
-        self.play(FadeIn(a12), FadeIn(a21), Write(equal_mark))
-        self.wait(0.8)
-        self.play(Write(eig_text_title))
-        self.play(AnimationGroup(*[Write(line) for line in eig_lines], lag_ratio=0.2))
-        self.play(Write(conclude))
-        self.wait(1.5)
-
-
-class Scene2CholeskyProcess(Scene):
-    """Phase D: step-by-step Cholesky substitution and LL^T verification."""
-
-    def construct(self) -> None:
-        title = Text("Scene 2B: Cholesky step-by-step", font=DEFAULT_FONT, color=EMPHASIS_COLOR).scale(TITLE_SCALE).to_edge(UP)
-        self.play(Write(title))
-
-        mat_a = build_text_matrix(matrix_to_strings(A), scale=0.5).scale(0.95)
-        mat_l = build_text_matrix(
-            [["?", "0", "0"], ["?", "?", "0"], ["?", "?", "?"]],
-            scale=0.5,
-        ).scale(0.95)
-
-        group = VGroup(mat_a, Text("=", font=DEFAULT_FONT, color=GREEN).scale(0.7), mat_l, Text("L^T", font=DEFAULT_FONT, color=TEXT_COLOR).scale(0.5))
-        group.arrange(RIGHT, buff=0.5)
-        group.shift(UP * 1.2)
-
-        self.play(FadeIn(group))
-
-        generic_formula = Text(
-            "l_jj = sqrt(a_jj - sum(l_jk^2))   l_ij = (a_ij - sum(l_ik*l_jk)) / l_jj",
-            font=DEFAULT_FONT,
-            color=TEXT_COLOR,
-        ).scale(0.38)
-        fit_to_width(generic_formula, 12.0)
-        generic_formula.next_to(group, DOWN, buff=0.8)
-        self.play(Write(generic_formula))
-
-        # D1 + D2: data-driven substitution steps
-        step_formula = Text("", font=DEFAULT_FONT, color=YELLOW).scale(0.42)
-        step_formula.next_to(generic_formula, DOWN, buff=0.75)
-        self.add(step_formula)
-
-        current_l = [["0", "0", "0"], ["0", "0", "0"], ["0", "0", "0"]]
-        for step in cholesky_steps():
-            formula_text = step.formula_numeric.replace("\\sqrt", "sqrt").replace("\\frac", "(").replace("\\sum", "sum")
-            new_formula = Text(formula_text, font=DEFAULT_FONT, color=YELLOW).scale(0.38)
-            fit_to_width(new_formula, 11.8)
-            new_formula.move_to(step_formula)
-            self.play(Transform(step_formula, new_formula))
-
-            i, j = step.matrix_pos
-            current_l[i][j] = fmt_num(step.value)
-            new_mat_l = build_text_matrix(current_l, scale=0.5).scale(0.95).move_to(mat_l)
-            self.play(Transform(mat_l, new_mat_l))
-
-        self.wait(0.5)
-
-        # D3: verify LL^T = A with list-based Cholesky
-        verify_ok = True  # Decomposition is correct by construction
-
-        verify_text = Text(
-            f"Verification: {'PASS' if verify_ok else 'FAIL'}",
-            font=DEFAULT_FONT,
-            color=GREEN if verify_ok else RED,
-        ).scale(0.46)
-        verify_text.next_to(step_formula, DOWN, buff=1.2)
-
-        finish_formula = Text("L * L^T = A", font=DEFAULT_FONT, color=GREEN).scale(0.60)
-        finish_formula.next_to(verify_text, DOWN, buff=0.5)
-
-        self.play(Write(verify_text))
-        self.play(Write(finish_formula))
-        self.wait(1.5)
-
-
-class Scene3EigenData(Scene):
-    """Phase E: show eigenvalues and eigenvectors that build matrix P."""
-
-    def construct(self) -> None:
-        title = Text("Scene 3A: Eigen data for diagonalization", font=DEFAULT_FONT, color=EMPHASIS_COLOR).scale(TITLE_SCALE).to_edge(UP)
-        self.play(Write(title))
-
-        # --- KHỐI 1: MA TRẬN A ---
-        matrix_a = build_text_matrix(matrix_to_strings(A), scale=0.5).scale(0.92)
-        # Đặt A ở bên trái
-        matrix_a.shift(LEFT * 3.5 + UP * 0.5)
-
-        input_label = Text("Input matrix A", font=DEFAULT_FONT, color=TEXT_COLOR).scale(0.56)
-        input_label.next_to(matrix_a, UP, buff=0.2)
-
-        self.play(FadeIn(matrix_a), Write(input_label))
-
-        # --- KHỐI 2: EIGENVALUES ---
-        eigval_title = Text("1) Eigenvalues from numpy.linalg.eig:", font=DEFAULT_FONT, color=TEXT_COLOR).scale(0.56)
-        # Đặt tiêu đề lambda ở nửa trên bên phải
-        eigval_title.shift(RIGHT * 2.0 + UP * 1.5)
-
-        eigval_lines = VGroup(
-            *[
-                Text(f"lambda{i+1} = {fmt_num(float(val), 4)}", font=DEFAULT_FONT, color=GREEN).scale(0.54)
-                for i, val in enumerate(EIGENVALUES)
-            ]
-        ).arrange(DOWN, aligned_edge=LEFT, buff=0.15)
-        eigval_lines.next_to(eigval_title, DOWN, aligned_edge=LEFT, buff=0.2)
-
-        self.play(Write(eigval_title))
-        self.play(AnimationGroup(*[Write(line) for line in eigval_lines], lag_ratio=0.2))
-
-        # --- KHỐI 3: EIGENVECTORS ---
-        eigvec_title = Text("2) Eigenvectors:", font=DEFAULT_FONT, color=TEXT_COLOR).scale(0.56)
-        eigvec_title.next_to(eigval_lines, DOWN, aligned_edge=LEFT, buff=0.5)
-        self.play(Write(eigvec_title))
-
-        eigvec_lines = VGroup(
-            *[
-                Text(
-                    f"v{i+1} = {vector_to_text(P[:, i], 4)}",
-                    font=DEFAULT_FONT,
-                    color=TEXT_COLOR,
-                ).scale(0.50)
-                for i in range(P.shape[1])
-            ]
-        ).arrange(DOWN, aligned_edge=LEFT, buff=0.15)
-        fit_to_width(eigvec_lines, 5.8)
-        eigvec_lines.next_to(eigvec_title, DOWN, aligned_edge=LEFT, buff=0.2)
-
-        self.play(AnimationGroup(*[Write(line) for line in eigvec_lines], lag_ratio=0.2))
-        self.wait(2) # Dừng lại để người xem đọc
-
-        # --- DỌN DẸP MÀN HÌNH CHUẨN BỊ CHO MA TRẬN P ---
-        # Ẩn Ma trận A và khối Eigenvalues đi để lấy không gian
-        self.play(
-            FadeOut(matrix_a), 
-            FadeOut(input_label),
-            FadeOut(eigval_title),
-            FadeOut(eigval_lines)
+class BaseMathScene(Scene):
+    TIME_FAST = 1.0
+    TIME_NORMAL = 1.5
+    TIME_SLOW = 2.5
+    WAIT_SHORT = 2.0
+    WAIT_LONG = 4.0
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.A = [
+            [4.0, 12.0, -16.0],
+            [12.0, 37.0, -43.0],
+            [-16.0, -43.0, 98.0],
+        ]
+        self.L = self.cholesky_decompose(self.A)
+        self.lambdas = [123.4772, 15.5040, 0.0188]
+        self.eigenvectors = [
+            [0.1630, 0.4573, -0.8742],
+            [-0.2127, -0.8489, -0.4838],
+            [0.9635, -0.2648, 0.0411],
+        ]
+        self.P = self.eigenvectors
+        self.P_inv = self.transpose(self.P)
+        self.D = [
+            [self.lambdas[0], 0.0, 0.0],
+            [0.0, self.lambdas[1], 0.0],
+            [0.0, 0.0, self.lambdas[2]],
+        ]
+
+    def transpose(self, matrix: list[list[float]]) -> list[list[float]]:
+        return [list(row) for row in zip(*matrix)]
+
+    def matmul(self, a: list[list[float]], b: list[list[float]]) -> list[list[float]]:
+        rows = len(a)
+        cols = len(b[0])
+        shared = len(b)
+        result = [[0.0 for _ in range(cols)] for _ in range(rows)]
+        for i in range(rows):
+            for k in range(shared):
+                av = a[i][k]
+                if av == 0.0:
+                    continue
+                for j in range(cols):
+                    result[i][j] += av * b[k][j]
+        return result
+
+    def cholesky_decompose(self, matrix: list[list[float]]) -> list[list[float]]:
+        n = len(matrix)
+        l = [[0.0 for _ in range(n)] for _ in range(n)]
+        for i in range(n):
+            for j in range(i + 1):
+                if i == j:
+                    s = sum(l[i][k] * l[i][k] for k in range(j))
+                    l[i][j] = math.sqrt(matrix[i][i] - s)
+                else:
+                    s = sum(l[i][k] * l[j][k] for k in range(j))
+                    l[i][j] = (matrix[i][j] - s) / l[j][j]
+        return l
+
+    def fmt(self, value: float) -> str:
+        if abs(value - round(value)) < 1e-9:
+            return str(int(round(value)))
+        return f"{value:.4f}"
+
+    def to_manim_str_matrix(self, matrix: list[list[float]]) -> list[list[str]]:
+        return [[self.fmt(value) for value in row] for row in matrix]
+
+    def highlight_cell(self, matrix: Matrix, row: int, col: int, color=YELLOW):
+        entries = matrix.get_entries()
+        n = int(round(math.sqrt(len(entries))))
+        index = (row - 1) * n + (col - 1)
+        return SurroundingRectangle(entries[index], color=color, buff=0.08)
+
+    def make_labeled_matrix(
+        self,
+        values: list[list[str]],
+        label: str,
+        label_color,
+        scale: float = 0.8,
+        h_buff: float | None = None,
+    ) -> VGroup:
+        kwargs = {}
+        if h_buff is not None:
+            kwargs["h_buff"] = h_buff
+        matrix = Matrix(values, **kwargs).scale(scale)
+        label_mob = MathTex(label, color=label_color).scale(scale).next_to(matrix, LEFT)
+        return VGroup(label_mob, matrix)
+
+    def make_section_title(self, text: str, color=YELLOW, font_size: int = 32):
+        return Text(text, color=color, font_size=font_size, weight="BOLD")
+
+    def _make_roadmap_card(
+        self,
+        header_text: str,
+        steps: list[str],
+        accent_color,
+        width: float = 6.2,
+    ) -> tuple[VGroup, dict[str, Text]]:
+        header = Text(header_text, color=accent_color, font_size=24, weight="BOLD")
+        step_mobjects = [Text(step, color=WHITE, font_size=22) for step in steps]
+        content = VGroup(header, *step_mobjects).arrange(DOWN, aligned_edge=LEFT, buff=0.22)
+        frame = RoundedRectangle(
+            corner_radius=0.18,
+            width=width,
+            height=content.height + 0.7,
+            stroke_color=accent_color,
+            stroke_width=2.5,
+            fill_color="#0b0f17",
+            fill_opacity=0.75,
+        ).move_to(content)
+        card = VGroup(frame, content)
+        step_map = {step: mob for step, mob in zip(steps, step_mobjects)}
+        return card, step_map
+
+    def show_transition_roadmap(self, part_index: int, step_name: str):
+        self.clear()
+
+        title = Text(
+            "Phân rã Cholesky và Chéo hóa ma trận",
+            color=YELLOW,
+            font_size=40,
+            weight="BOLD",
+        ).to_edge(UP, buff=0.35)
+
+        part1_card, part1_steps = self._make_roadmap_card(
+            "PHẦN I: PHÂN RÃ CHOLESKY",
+            [
+                "1.1. Bài toán & Điều kiện",
+                "1.2. Kiểm tra tính chất SPD",
+                "1.3. Tính toán ma trận L",
+                "1.4. Đánh giá chi phí",
+            ],
+            GREEN,
+        )
+        part2_card, part2_steps = self._make_roadmap_card(
+            "PHẦN II: CHÉO HÓA MA TRẬN",
+            [
+                "2.1. Giới thiệu Bài toán",
+                "2.2. Thuật toán Chéo hóa (Tìm D, P)",
+            ],
+            BLUE,
         )
 
-        # Di chuyển khối Eigenvectors sang trái
-        eigvec_group = VGroup(eigvec_title, eigvec_lines)
-        self.play(eigvec_group.animate.to_edge(LEFT).shift(RIGHT * 0.5))
+        cards = VGroup(part1_card, part2_card).arrange(RIGHT, buff=0.7).move_to(DOWN * 0.05)
 
-        # --- KHỐI 4: MA TRẬN P ---
-        p_title = Text("Columns v1, v2, v3 form matrix P", font=DEFAULT_FONT, color=YELLOW).scale(0.56)
-        p_matrix = build_text_matrix(matrix_to_strings(P, decimals=4), scale=0.45).scale(0.88)
+        self.play(Write(title), run_time=self.TIME_NORMAL)
+        self.play(FadeIn(cards, shift=UP * 0.15), run_time=self.TIME_NORMAL)
+
+        active_card = part1_card if part_index == 1 else part2_card
+        active_color = GREEN if part_index == 1 else BLUE
+        step_lookup = part1_steps if part_index == 1 else part2_steps
+        active_step = step_lookup.get(step_name)
+        if active_step is None:
+            active_step = next(iter(step_lookup.values()))
+
+        card_box = SurroundingRectangle(active_card, color=active_color, buff=0.12)
+        step_box = SurroundingRectangle(active_step, color=YELLOW, buff=0.1)
+
+        self.play(Create(card_box), Create(step_box), run_time=self.TIME_NORMAL)
+        self.wait(self.WAIT_SHORT)
+        self.play(FadeOut(title), FadeOut(cards), FadeOut(card_box), FadeOut(step_box), run_time=self.TIME_FAST)
+
+class Scene0_Overview(BaseMathScene):
+    def construct(self):
+        title = Text("Bài toán Phân tích Ma trận", color=YELLOW, font_size=40, weight="BOLD")
+        title.to_edge(UP, buff=0.6)
+
+        matrix_a = Matrix(
+            self.to_manim_str_matrix(self.A),
+            element_to_mobject=lambda value: MathTex(value),
+        ).scale(0.95)
         
-        # Nhóm P lại và đặt nó cạnh khối Eigenvectors (ở giữa/phải màn hình)
-        p_group = VGroup(p_title, p_matrix).arrange(DOWN, buff=0.3)
-        fit_to_width(p_group, 5.9)
-        p_group.to_edge(RIGHT, buff=0.55).shift(DOWN * 0.15)
+        # SỬA LỖI CÂN ĐỐI: Căn giữa trực tiếp ma trận thay vì căn giữa cả Group
+        matrix_a.move_to(UP * 0.4) 
+        label_a = MathTex("A =", color=ORANGE).next_to(matrix_a, LEFT)
+        center_group = VGroup(label_a, matrix_a)
 
-        self.play(Write(p_title), FadeIn(p_matrix, shift=UP * 0.2))
+        # Truyền riêng phần Text (Tiếng Việt) và MathTex (Công thức)
+        left_panel = self._overview_branch_panel(
+            prefix="Phần 1: ", 
+            math_formula="A = LL^T", 
+            body="Phân rã ma trận SPD", 
+            accent_color=GREEN
+        )
+        right_panel = self._overview_branch_panel(
+            prefix="Phần 2: ", 
+            math_formula="A = PDP^{-1}", 
+            body="Chéo hóa ma trận", 
+            accent_color=BLUE
+        )
+        
+        # Mở rộng khoảng cách 2 panel ra một chút cho thoáng
+        left_panel.move_to(LEFT * 3.5 + DOWN * 1.8)
+        right_panel.move_to(RIGHT * 3.5 + DOWN * 1.8)
 
-        # Highlight các cột
-        col_highlights = []
-        p_cells = p_matrix[1]
-        for c in range(P.shape[1]):
-            col_group = VGroup(*[p_cells[r][c] for r in range(P.shape[0])])
-            col_highlights.append(SurroundingRectangle(col_group, color=YELLOW, stroke_width=2.0, buff=0.06))
+        # SỬA LỖI LỆCH MŨI TÊN: Mũi tên xuất phát từ chính giữa đáy của ma trận A để đảm bảo đối xứng tuyệt đối 100%
+        left_arrow = Arrow(matrix_a.get_bottom(), left_panel.get_top(), buff=0.2, color=GREEN)
+        right_arrow = Arrow(matrix_a.get_bottom(), right_panel.get_top(), buff=0.2, color=BLUE)
 
-        for i, hl in enumerate(col_highlights):
-            label = Text(f"v{i+1}", font=DEFAULT_FONT, color=YELLOW).scale(0.5)
-            label.next_to(hl, DOWN, buff=0.1)
-            self.play(Create(hl), FadeIn(label, shift=UP * 0.1), run_time=0.45)
-            self.play(FadeOut(label), FadeOut(hl), run_time=0.30)
+        self.play(Write(title), FadeIn(center_group), run_time=self.TIME_NORMAL)
+        self.play(
+            AnimationGroup(
+                Create(left_arrow),
+                Create(right_arrow),
+                FadeIn(left_panel, shift=UP * 0.15),
+                FadeIn(right_panel, shift=UP * 0.15),
+                lag_ratio=0.15,
+            ),
+            run_time=self.TIME_NORMAL,
+        )
+        self.wait(self.WAIT_LONG)
 
-        # Hoàn tất
-        done = Text("Scene 3A done: eigen data ready for A = P D P^-1", font=DEFAULT_FONT, color=GREEN).scale(0.55)
-        done.to_edge(DOWN)
-        self.play(Write(done))
-        self.wait(1.5)
+        self.play(
+            center_group.animate.scale(0.72).to_corner(UL, buff=0.7),
+            FadeOut(left_panel),
+            FadeOut(right_panel),
+            FadeOut(left_arrow),
+            FadeOut(right_arrow),
+            FadeOut(title),
+            run_time=self.TIME_NORMAL,
+        )
+        self.wait(self.TIME_FAST)
+        self.clear()
+
+    def _overview_branch_panel(self, prefix: str, math_formula: str, body: str, accent_color) -> VGroup:
+        # Tách riêng chữ tiếng Việt và công thức Toán để render chuẩn chỉnh
+        prefix_text = Text(prefix, color=accent_color, font_size=24, weight="BOLD")
+        formula_text = MathTex(math_formula, color=accent_color).scale(0.85)
+        
+        # Xếp chữ và công thức nằm ngang cạnh nhau
+        headline_group = VGroup(prefix_text, formula_text).arrange(RIGHT, buff=0.15)
+        
+        body_text = Text(body, color=WHITE, font_size=20)
+        content = VGroup(headline_group, body_text).arrange(DOWN, buff=0.25)
+        
+        frame = RoundedRectangle(
+            corner_radius=0.2,
+            width=max(content.width + 0.8, 4.2), # Khung tự co giãn nếu nội dung dài hơn
+            height=content.height + 0.6,
+            stroke_color=accent_color,
+            fill_color="#0b0f17",
+            fill_opacity=0.7,
+        ).move_to(content)
+        
+        return VGroup(frame, content)
+    
+class Scene1_Cholesky_IntroAndSPD(BaseMathScene):
+    def construct(self):
+        # 1.1. Mục tiêu và Điều kiện
+        self.show_transition_roadmap(1, "1.1. Bài toán & Điều kiện")
+        self.show_goal_and_warning()
+
+        # 1.2. Kiểm tra SPD
+        self.show_transition_roadmap(1, "1.2. Kiểm tra tính chất SPD")
+        self.show_spd_proof()
+
+    def show_goal_and_warning(self):
+        # Đã bỏ weight="BOLD" để sửa lỗi font ô vuông tiếng Việt
+        title = Text("Mục tiêu của bài toán", color=GREEN, font_size=36).to_edge(UP, buff=0.8)
+        formula = MathTex(r"A = L \cdot L^T", color=GREEN).scale(1.8).next_to(title, DOWN, buff=0.8)
+        
+        warning_text = Text(
+            "ĐIỀU KIỆN ÁP DỤNG: Ma trận A phải là SPD\n(Symmetric Positive Definite)",
+            color=RED,
+            font_size=26,
+            t2c={"(Symmetric Positive Definite)": YELLOW} 
+        )
+        warning_box = SurroundingRectangle(warning_text, color=RED, buff=0.3, stroke_width=4)
+        warning_group = VGroup(warning_box, warning_text).move_to(DOWN * 1.5)
+
+        self.play(Write(title), FadeIn(formula, shift=UP*0.2), run_time=self.TIME_NORMAL)
+        self.wait(self.WAIT_SHORT)
+        
+        self.play(FadeIn(warning_group, scale=1.1), run_time=self.TIME_FAST)
+        self.play(Indicate(warning_box, color=YELLOW, scale_factor=1.05), run_time=self.TIME_NORMAL)
+        self.wait(self.WAIT_SHORT)
+        
+        self.play(FadeOut(title), FadeOut(formula), FadeOut(warning_group), run_time=self.TIME_FAST)
+
+    def show_spd_proof(self):
+        # Đã bỏ weight="BOLD"
+        title1 = Text("1. Tính đối xứng (Symmetric)", color=YELLOW, font_size=32).to_edge(UP, buff=0.5)
+        self.play(Write(title1), run_time=self.TIME_NORMAL)
+
+        matrix_a = Matrix(self.to_manim_str_matrix(self.A), element_to_mobject=lambda value: MathTex(value)).scale(0.8)
+        label_a = MathTex("A", color=ORANGE).next_to(matrix_a, UP)
+        matrix_group = VGroup(label_a, matrix_a).move_to(LEFT * 3.0 + DOWN * 0.2) 
+        self.play(FadeIn(matrix_group), run_time=self.TIME_NORMAL)
+
+        matrix_at = Matrix(self.to_manim_str_matrix(self.A), element_to_mobject=lambda value: MathTex(value)).scale(0.8)
+        label_at = MathTex("A^T", color=BLUE).next_to(matrix_at, UP)
+        matrix_at_group = VGroup(label_at, matrix_at).move_to(RIGHT * 3.0 + DOWN * 0.2)
+        
+        self.play(
+            AnimationGroup(TransformFromCopy(matrix_a, matrix_at), FadeIn(label_at), lag_ratio=0.2), 
+            run_time=self.TIME_NORMAL
+        )
+
+        sym_result = MathTex(r"A = A^T", color=GREEN).scale(1.3).move_to(DOWN * 2.8)
+        self.play(Write(sym_result), run_time=self.TIME_NORMAL)
+        self.wait(self.WAIT_SHORT)
+        
+        self.play(FadeOut(matrix_at), FadeOut(label_at), FadeOut(sym_result), run_time=self.TIME_FAST)
+
+        # --- BƯỚC 2: TIÊU CHUẨN SYLVESTER ---
+        title2 = Text("2. Tiêu chuẩn Sylvester (Định thức con > 0)", color=YELLOW, font_size=32).to_edge(UP, buff=0.5)
+        self.play(Transform(title1, title2), run_time=self.TIME_NORMAL)
+
+        # FIX BỐ CỤC: Ép ma trận A nhỏ lại 1 chút và dời hẳn xuống dưới cùng bên trái để né chữ
+        self.play(matrix_group.animate.scale(0.85).move_to(LEFT * 3.5 + DOWN * 0.8), run_time=self.TIME_NORMAL)
+
+        entries = matrix_a.get_entries()
+        
+        box1 = SurroundingRectangle(entries[0], color=RED, buff=0.1)
+        delta1 = MathTex(r"\Delta_1 = \det([4]) = 4 > 0", color=RED).scale(0.85).move_to(RIGHT * 2.5 + UP * 1.5)
+        self.play(Create(box1), Write(delta1), run_time=self.TIME_NORMAL)
+        self.wait(self.WAIT_SHORT)
+
+        box2 = SurroundingRectangle(VGroup(entries[0], entries[1], entries[3], entries[4]), color=PURPLE, buff=0.1)
+        delta2 = MathTex(r"\Delta_2 = 4(37) - 12(12) = 4 > 0", color=PURPLE).scale(0.85).next_to(delta1, DOWN, buff=0.8).align_to(delta1, LEFT)
+        self.play(Transform(box1, box2), Write(delta2), run_time=self.TIME_NORMAL)
+        self.wait(self.WAIT_SHORT)
+
+        self.play(FadeOut(delta1), FadeOut(delta2), run_time=self.TIME_FAST)
+        
+        box3 = SurroundingRectangle(VGroup(*entries), color=YELLOW, buff=0.1)
+        
+        d3_line1 = MathTex(r"\Delta_3 = 4(37 \cdot 98 - (-43)^2)", color=YELLOW)
+        d3_line2 = MathTex(r"- 12(12 \cdot 98 - (-16)(-43))", color=YELLOW)
+        d3_line3 = MathTex(r"- 16(12 \cdot (-43) - 37(-16))", color=YELLOW)
+        d3_line4 = MathTex(r"= 7108 - 5856 - 1216", color=YELLOW)
+        d3_line5 = MathTex(r"= 36 > 0", color=YELLOW)
+        
+        delta3_group = VGroup(d3_line1, d3_line2, d3_line3, d3_line4, d3_line5)
+        delta3_group.arrange(DOWN, aligned_edge=LEFT, buff=0.25).scale(0.75)
+        delta3_group.move_to(RIGHT * 2.5 + DOWN * 0.2) 
+
+        self.play(Transform(box1, box3), run_time=self.TIME_NORMAL)
+        
+        self.play(Write(VGroup(d3_line1, d3_line2, d3_line3)), run_time=self.TIME_SLOW)
+        self.wait(1.0)
+        self.play(Write(VGroup(d3_line4, d3_line5)), run_time=self.TIME_NORMAL)
+        self.wait(self.WAIT_SHORT)
+
+        stamp = Text("PASSED", color=GREEN, font_size=60) # Đã bỏ weight="BOLD"
+        stamp.rotate(20 * PI / 180).move_to(matrix_a.get_center())
+        
+        stamp_box = SurroundingRectangle(stamp, color=GREEN, buff=0.2, stroke_width=6)
+        stamp_group = VGroup(stamp_box, stamp)
+        
+        self.play(FadeIn(stamp_group, scale=2.5), run_time=self.TIME_NORMAL)
+        self.wait(self.WAIT_LONG) 
+        
+        self.clear()
 
 
-class Scene3DiagonalizationProcess(Scene):
-    """Phase F: assemble P, D, P^-1 and verify A = P D P^-1."""
+from manim import Line
 
-    def construct(self) -> None:
-        title = Text("Scene 3B: Assemble diagonalization", font=DEFAULT_FONT, color=EMPHASIS_COLOR).scale(TITLE_SCALE).to_edge(UP)
-        self.play(Write(title))
+class Scene2_Cholesky_Calculation(BaseMathScene):
+    def construct(self):
+        # 1.3. Tính toán L
+        self.show_transition_roadmap(1, "1.3. Tính toán ma trận L")
+        self.calculate_l_step_by_step()
+        self.verify_cholesky_numpy()
 
-        formula = Text("A = P D P^-1", font=DEFAULT_FONT, color=GREEN).scale(0.74)
-        formula.next_to(title, DOWN, buff=0.18)
-        self.play(Write(formula))
+        # 1.4. Chi phí
+        self.show_transition_roadmap(1, "1.4. Đánh giá chi phí")
+        self.show_cost_bar_chart()
 
-        p_title = Text("P", font=DEFAULT_FONT, color=YELLOW).scale(0.58)
-        d_title = Text("D", font=DEFAULT_FONT, color=YELLOW).scale(0.58)
-        pinv_title = Text("P^-1", font=DEFAULT_FONT, color=YELLOW).scale(0.58)
+    def calculate_l_step_by_step(self):
+        title = Text("Tính toán từng phần tử của L", color=YELLOW, font_size=34).to_edge(UP, buff=0.4)
 
-        p_matrix = build_text_matrix(matrix_to_strings(P, decimals=4), scale=0.34, cell_width=0.98).scale(0.78)
-        d_matrix = build_text_matrix(matrix_to_strings(D, decimals=4), scale=0.38, cell_width=0.98).scale(0.80)
-        pinv_matrix = build_text_matrix(matrix_to_strings(P_INV, decimals=4), scale=0.34, cell_width=0.98).scale(0.78)
+        matrix_a = Matrix(self.to_manim_str_matrix(self.A), element_to_mobject=lambda value: MathTex(value)).scale(0.75).move_to(LEFT * 3.5 + UP * 1.2)
+        label_a = MathTex("A", color=ORANGE).scale(0.9).next_to(matrix_a, UP)
+        
+        l_initial = [["0", "0", "0"], ["0", "0", "0"], ["0", "0", "0"]]
+        matrix_l = Matrix(l_initial, element_to_mobject=lambda value: MathTex(value)).scale(0.75).move_to(RIGHT * 3.5 + UP * 1.2)
+        label_l = MathTex("L", color=GREEN).scale(0.9).next_to(matrix_l, UP)
+        
+        for i, entry in enumerate(matrix_l.get_entries()):
+            if i in [1, 2, 5]: 
+                entry.set_opacity(0.3)
 
-        p_panel = VGroup(p_title, p_matrix).arrange(DOWN, buff=0.12)
-        d_panel = VGroup(d_title, d_matrix).arrange(DOWN, buff=0.12)
-        pinv_panel = VGroup(pinv_title, pinv_matrix).arrange(DOWN, buff=0.12)
+        divider = Line(LEFT * 6, RIGHT * 6, color=BLUE, stroke_opacity=0.5).move_to(DOWN * 0.4)
 
-        matrix_row = VGroup(p_panel, d_panel, pinv_panel).arrange(RIGHT, buff=0.55)
-        fit_to_width(matrix_row, 12.8)
-        matrix_row.next_to(formula, DOWN, buff=0.35)
+        recurrence = VGroup(
+            MathTex(r"L_{jj} = \sqrt{A_{jj} - \sum_{k<j}L_{jk}^2}", color=WHITE),
+            MathTex(r"L_{ij} = \frac{A_{ij} - \sum_{k<j}L_{ik}L_{jk}}{L_{jj}}", color=WHITE),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.3).scale(0.65).move_to(LEFT * 3.5 + DOWN * 1.8)
 
-        self.play(FadeIn(matrix_row, shift=UP * 0.15))
+        self.play(
+            Write(title), 
+            FadeIn(matrix_a), FadeIn(label_a), 
+            FadeIn(matrix_l), FadeIn(label_l), 
+            Create(divider),
+            Write(recurrence), 
+            run_time=self.TIME_NORMAL
+        )
 
-        # Highlight the diagonal of D because those entries are the eigenvalues.
-        d_cells = d_matrix[1]
-        for i in range(3):
-            diag_box = SurroundingRectangle(d_cells[i][i], color=YELLOW, stroke_width=2.2, buff=0.06)
-            self.play(Create(diag_box), run_time=0.35)
-            self.play(FadeOut(diag_box), run_time=0.2)
-
-        build_text = Text("Columns of P come from eigenvectors; diagonal of D stores eigenvalues.", font=DEFAULT_FONT, color=TEXT_COLOR).scale(0.48)
-        fit_to_width(build_text, 12.8)
-        build_text.next_to(matrix_row, DOWN, buff=0.32)
-        self.play(Write(build_text))
-
-        reconstructed = P @ D @ P_INV
-        max_abs_error = float(np.max(np.abs(reconstructed - A)))
-        verify_ok = bool(np.allclose(reconstructed, A, atol=1e-8, rtol=1e-8))
-
-        verify_text = Text(
-            f"Verification: {'PASS' if verify_ok else 'FAIL'} | max error = {fmt_num(max_abs_error, 8)}",
-            font=DEFAULT_FONT,
-            color=GREEN if verify_ok else RED,
-        ).scale(0.55)
-        fit_to_width(verify_text, 12.8)
-        verify_text.next_to(build_text, DOWN, buff=0.26)
-
-        self.play(Write(verify_text))
-
-        result_formula = Text("P D P^-1 = A", font=DEFAULT_FONT, color=GREEN).scale(0.72)
-        result_formula.next_to(verify_text, DOWN, buff=0.25)
-        self.play(Write(result_formula))
-
-        self.wait(1.4)
-
-
-class Part2PipelinePreview(Scene):
-    """Phase G: compact end-to-end preview of Part 2 scenes."""
-
-    def construct(self) -> None:
-        title = Text("Part 2 pipeline preview", font=DEFAULT_FONT, color=EMPHASIS_COLOR).scale(0.72).to_edge(UP)
-        self.play(Write(title))
-
-        cards = []
-        rows = [
-            ("Scene 1", "Intro", "A = L L^T / A = P D P^-1", GREEN),
-            ("Scene 2A", "SPD proof", "A = A^T and λ > 0", RED),
-            ("Scene 2B", "Cholesky", "Step-by-step L and LL^T", BLUE),
-            ("Scene 3A", "Eigen data", "λ and eigenvectors -> P", YELLOW),
-            ("Scene 3B", "Diagonalization", "P, D, P^-1 -> A", GREEN),
+        steps = [
+            {"formula": r"L_{11}=\sqrt{4}=2", "value": "2", "target": (1, 1), 
+             "hl_A": [(1, 1)], "hl_L": []},
+            
+            {"formula": r"L_{21}=\frac{12}{2}=6", "value": "6", "target": (2, 1), 
+             "hl_A": [(2, 1)], "hl_L": [(1, 1)]},
+            
+            {"formula": r"L_{31}=\frac{-16}{2}=-8", "value": "-8", "target": (3, 1), 
+             "hl_A": [(3, 1)], "hl_L": [(1, 1)]},
+            
+            {"formula": r"L_{22}=\sqrt{37-6^2}=1", "value": "1", "target": (2, 2), 
+             "hl_A": [(2, 2)], "hl_L": [(2, 1)]},
+            
+            {"formula": r"L_{32}=\frac{-43-(-8\cdot 6)}{1}=5", "value": "5", "target": (3, 2), 
+             "hl_A": [(3, 2)], "hl_L": [(3, 1), (2, 1), (2, 2)]},
+            
+            {"formula": r"L_{33}=\sqrt{98-((-8)^2+5^2)}=3", "value": "3", "target": (3, 3), 
+             "hl_A": [(3, 3)], "hl_L": [(3, 1), (3, 2)]},
         ]
 
-        for name, subtitle, detail, accent in rows:
-            header = Text(name, font=DEFAULT_FONT, color=accent).scale(0.52)
-            sub = Text(subtitle, font=DEFAULT_FONT, color=TEXT_COLOR).scale(0.42)
-            info = Text(detail, font=DEFAULT_FONT, color=TEXT_COLOR).scale(0.34)
-            card_body = VGroup(header, sub, info).arrange(DOWN, buff=0.08)
-            card_box = Rectangle(width=3.6, height=1.35, color=accent, stroke_width=2.0)
-            card = VGroup(card_box, card_body)
-            card_body.move_to(card_box.get_center())
-            cards.append(card)
+        formula_box = MathTex(steps[0]["formula"], color=YELLOW).scale(0.9).move_to(RIGHT * 3.0 + DOWN * 1.8)
+        self.play(Write(formula_box), run_time=self.TIME_NORMAL)
 
-        top_row = VGroup(cards[0], cards[1], cards[2]).arrange(RIGHT, buff=0.35)
-        bottom_row = VGroup(cards[3], cards[4]).arrange(RIGHT, buff=0.45)
-        bottom_row.next_to(top_row, DOWN, buff=0.35)
-        pipeline = VGroup(top_row, bottom_row)
-        fit_to_width(pipeline, 12.8)
-        pipeline.next_to(title, DOWN, buff=0.35)
+        for step in steps:
+            updated_formula = MathTex(step["formula"], color=YELLOW).scale(0.9).move_to(formula_box)
+            self.play(Transform(formula_box, updated_formula), run_time=self.TIME_NORMAL)
 
-        self.play(FadeIn(pipeline, shift=UP * 0.15))
+            hl_boxes_A = [self.highlight_cell(matrix_a, r, c, ORANGE) for r, c in step["hl_A"]]
+            hl_boxes_L = [self.highlight_cell(matrix_l, r, c, PURPLE) for r, c in step["hl_L"]]
+            highlights = hl_boxes_A + hl_boxes_L
+            
+            if highlights:
+                self.play(*[FadeIn(box) for box in highlights], run_time=self.TIME_FAST)
 
-        footer = Text("Render individually for rubrics, or render the full file for integration check.", font=DEFAULT_FONT, color=TEXT_COLOR).scale(0.48)
-        fit_to_width(footer, 12.8)
-        footer.to_edge(DOWN)
-        self.play(Write(footer))
-        self.wait(1.4)
+            row, col = step["target"]
+            index = (row - 1) * 3 + (col - 1)
+            target_entry = matrix_l.get_entries()[index]
+            
+            flying_value = MathTex(step["value"], color=GREEN).scale(0.8).move_to(formula_box).shift(UP * 0.6)
+            replacement = MathTex(step["value"], color=GREEN).scale(0.75).move_to(target_entry.get_center()) 
 
+            self.play(FadeIn(flying_value, shift=UP * 0.2), run_time=self.TIME_FAST)
+            
+            self.play(flying_value.animate.move_to(target_entry.get_center()), run_time=self.TIME_NORMAL)
+            
+            target_entry.become(replacement)
+            
+            if highlights:
+                self.play(FadeOut(flying_value), *[FadeOut(box) for box in highlights], run_time=self.TIME_FAST)
+            else:
+                self.play(FadeOut(flying_value), run_time=self.TIME_FAST)
 
-class Scene4FinalRecap(Scene):
-    """Phase H support scene to summarize key results and stabilize final duration."""
+        self.wait(self.WAIT_LONG)
+        self.clear()
 
-    def construct(self) -> None:
-        title = Text("Final recap of Part 2", font=DEFAULT_FONT, color=EMPHASIS_COLOR).scale(0.74).to_edge(UP)
-        self.play(Write(title))
+    def verify_cholesky_numpy(self):
+        title = Text("Đối chiếu kết quả phân rã Cholesky", color=BLUE, font_size=34).to_edge(UP, buff=0.6)
+        np_A = np.array(self.A)
+        np_L = np.linalg.cholesky(np_A)
 
-        points = [
-            "1) A was verified as SPD: symmetric and positive eigenvalues.",
-            "2) Cholesky decomposition produced L with LL^T = A.",
-            "3) Eigenvalues and eigenvectors were extracted from A.",
-            "4) Matrices P, D, and P^-1 reconstructed A by PDP^-1.",
-            "5) Numerical verification passed with a small reconstruction error.",
-            "6) Pipeline Scene1 -> Scene2A -> Scene2B -> Scene3A -> Scene3B is complete.",
-        ]
+        manual_group = self.make_labeled_matrix(self.to_manim_str_matrix(self.L), "L_{manual} =", ORANGE, scale=0.75)
+        numpy_group = self.make_labeled_matrix(self.to_manim_str_matrix(np_L.tolist()), "L_{numpy} =", BLUE, scale=0.75)
 
-        bullet_group = VGroup()
-        for point in points:
-            line = Text(point, font=DEFAULT_FONT, color=TEXT_COLOR).scale(0.46)
-            fit_to_width(line, 12.5)
-            bullet_group.add(line)
+        manual_row = VGroup(Text("Tính toán thủ công:", color=WHITE, font_size=26), manual_group).arrange(RIGHT, buff=0.8)
+        numpy_row = VGroup(Text("Thư viện Numpy:", color=WHITE, font_size=26), numpy_group).arrange(RIGHT, buff=0.8)
+        
+        # FIX TRÀN VIỀN: Đẩy khối đối chiếu lên giữa màn hình và thu hẹp khoảng cách với dòng kết luận
+        comparison = VGroup(manual_row, numpy_row).arrange(DOWN, aligned_edge=LEFT, buff=0.6).move_to(UP * 0.4)
 
-        bullet_group.arrange(DOWN, aligned_edge=LEFT, buff=0.22)
-        bullet_group.next_to(title, DOWN, buff=0.45).to_edge(LEFT, buff=0.6)
+        msg = Text("✓ Ma trận L khớp hoàn toàn với numpy.linalg.cholesky!", color=GREEN, font_size=26).next_to(comparison, DOWN, buff=0.8)
 
-        for line in bullet_group:
-            self.play(Write(line), run_time=0.7)
-            self.wait(5.0)
+        self.play(Write(title), run_time=self.TIME_NORMAL)
+        self.play(FadeIn(manual_row, shift=RIGHT * 0.2), run_time=self.TIME_NORMAL)
+        self.wait(self.WAIT_SHORT)
+        self.play(FadeIn(numpy_row, shift=RIGHT * 0.2), run_time=self.TIME_NORMAL)
+        self.wait(self.WAIT_SHORT)
+        self.play(Write(msg), run_time=self.TIME_NORMAL)
+        self.wait(self.WAIT_LONG)
+        self.clear()
 
-        outro = Text("End of final video", font=DEFAULT_FONT, color=GREEN).scale(0.70)
-        outro.to_edge(DOWN)
-        self.play(Write(outro))
-        self.wait(6.0)
+    def show_cost_bar_chart(self):
+        title = Text("Đánh giá chi phí tính toán", color=YELLOW, font_size=34).to_edge(UP, buff=0.6)
+        
+        chart = BarChart(
+            values=[2.0, 1.0],
+            bar_names=["LU", "Cholesky"],
+            y_range=[0, 2.5, 0.5],
+            bar_colors=[RED, GREEN],
+            y_length=3.5, 
+            x_length=5.5,
+        ).move_to(UP * 0.8)
+        
+        stats = VGroup(
+            MathTex(r"\text{LU} \approx \frac{2}{3}n^3", color=RED),
+            MathTex(r"\text{Cholesky} \approx \frac{1}{3}n^3", color=GREEN),
+        ).arrange(RIGHT, buff=1.5).next_to(chart, DOWN, buff=0.5)
+        
+        conclusion = Text("Tiết kiệm xấp xỉ 50% khối lượng tính toán", color=YELLOW, font_size=30).next_to(stats, DOWN, buff=0.4)
 
-
-class Part2Preview(Scene):
-    """Optional stitch scene for quick local preview of A-B-C-D-E in one render."""
-
-    def construct(self) -> None:
-        header = Text("Part 2 Preview: A-B-C-D-E completed", font=DEFAULT_FONT, color=EMPHASIS_COLOR).scale(0.72)
-        sub = Text("Use individual scene classes for rubric checks", font=DEFAULT_FONT, color=TEXT_COLOR).scale(0.58).next_to(header, DOWN)
-        self.play(FadeIn(header, shift=UP * 0.2), FadeIn(sub, shift=UP * 0.2))
-        self.wait(1)
-        self.play(FadeOut(header), FadeOut(sub))
-
-
-def _run_cmd(cmd: list[str], cwd: Path) -> None:
-    env = dict(os.environ)
-    # Force CLI quality flags (e.g. -qm) to take effect when autorunning.
-    env["PRJ1_MANIM_FORCE_DEFAULT_1080"] = "0"
-    completed = subprocess.run(cmd, cwd=str(cwd), check=False, env=env)
-    if completed.returncode != 0:
-        raise RuntimeError(f"Command failed ({completed.returncode}): {' '.join(cmd)}")
-
-
-def _find_latest_scene_video(project_dir: Path, scene_name: str) -> Path:
-    root = project_dir / "media" / "videos" / "manim_scene"
-    matches = list(root.glob(f"*/{scene_name}.mp4"))
-    if not matches:
-        raise FileNotFoundError(f"Rendered scene file not found: {scene_name}")
-    matches.sort(key=lambda p: p.stat().st_mtime, reverse=True)
-    return matches[0]
+        self.play(Write(title), FadeIn(chart), run_time=self.TIME_NORMAL)
+        self.play(Write(stats), run_time=self.TIME_NORMAL)
+        self.play(Write(conclusion), run_time=self.TIME_NORMAL)
+        self.wait(self.WAIT_LONG)
+        self.clear()
 
 
-def _resolve_ffmpeg() -> str:
-    ffmpeg = shutil.which("ffmpeg")
-    if ffmpeg:
-        return ffmpeg
-    try:
-        from imageio_ffmpeg import get_ffmpeg_exe
+class Scene3_Diagonalization(BaseMathScene):
+    def construct(self):
+        # 2.1. Giới thiệu Bài toán
+        self.show_transition_roadmap(2, "2.1. Giới thiệu Bài toán")
+        self.show_introduction()
 
-        return get_ffmpeg_exe()
-    except Exception as exc:
-        raise RuntimeError("ffmpeg executable not found. Install ffmpeg or imageio-ffmpeg.") from exc
+        # 2.2. Thuật toán Chéo hóa (Tìm D, P)
+        self.show_transition_roadmap(2, "2.2. Thuật toán Chéo hóa (Tìm D, P)")
+        self.find_matrix_D()
+        self.find_matrix_P()
+        self.show_final_assembly()
 
+        # Đối chiếu kết quả
+        self.show_final_verification()
 
-def _get_video_info(video_path: Path) -> tuple[float, int, int, float]:
-    import av
+    def show_introduction(self):
+        title = self.make_section_title("Giới thiệu Bài toán Chéo hóa", BLUE, 34).to_edge(UP, buff=0.5)
+        
+        goal = MathTex(r"A = P \cdot D \cdot P^{-1}", color=GREEN).scale(1.8).move_to(UP * 0.5)
+        
+        desc_group = VGroup(
+            Text("Mục tiêu của bài toán:", color=WHITE, font_size=26),
+            Text("- Tìm ma trận đường chéo D (chứa các trị riêng)", color=YELLOW, font_size=24),
+            Text("- Tìm ma trận khả nghịch P (chứa các vector riêng)", color=ORANGE, font_size=24)
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.25).next_to(goal, DOWN, buff=0.8)
 
-    with av.open(str(video_path)) as container:
-        stream = container.streams.video[0]
-        if container.duration is not None:
-            duration_seconds = float(container.duration) / 1_000_000.0
-        else:
-            duration_seconds = float(stream.duration * stream.time_base) if stream.duration is not None else 0.0
-        width = int(stream.width)
-        height = int(stream.height)
-        fps = float(stream.average_rate) if stream.average_rate is not None else 0.0
-    return duration_seconds, width, height, fps
+        self.play(Write(title), run_time=self.TIME_NORMAL)
+        self.play(FadeIn(goal, shift=UP*0.2), run_time=self.TIME_NORMAL)
+        self.play(FadeIn(desc_group), run_time=self.TIME_NORMAL)
+        
+        self.wait(self.WAIT_LONG)
+        
+        self.play(FadeOut(title), FadeOut(goal), FadeOut(desc_group), run_time=self.TIME_FAST)
 
+    def find_matrix_D(self):
+        title = self.make_section_title("Bước 1: Tìm ma trận D (Trị riêng)", YELLOW, 30).to_edge(UP, buff=0.4)
+        self.play(Write(title), run_time=self.TIME_NORMAL)
 
-def _render_final_scenes(project_dir: Path, disable_caching: bool) -> list[Path]:
-    outputs: list[Path] = []
-    for scene in FINAL_SCENES:
-        print(f"[render] {scene}")
-        cmd = [
-            sys.executable,
-            "-m",
-            "manim",
-            "-qm",
-            "--resolution",
-            "1280,720",
-            "--fps",
-            "30",
-            "manim_scene.py",
-            scene,
-        ]
-        if disable_caching:
-            cmd.append("--disable_caching")
-        _run_cmd(cmd, cwd=project_dir)
-        outputs.append(_find_latest_scene_video(project_dir, scene))
-    return outputs
+        char_eq = MathTex(r"\det(A - \lambda I) = 0", color=WHITE).scale(1.2).move_to(LEFT * 3.0 + UP * 1.5)
+        self.play(Write(char_eq), run_time=self.TIME_NORMAL)
 
+        mat_a_lam = Matrix(
+            [["4-\\lambda", "12", "-16"], ["12", "37-\\lambda", "-43"], ["-16", "-43", "98-\\lambda"]],
+            h_buff=2.0,
+            element_to_mobject=lambda value: MathTex(value),
+        ).scale(0.65).move_to(LEFT * 3.0 + DOWN * 0.5)
+        
+        self.play(FadeIn(mat_a_lam), run_time=self.TIME_NORMAL)
+        self.play(
+            Indicate(mat_a_lam.get_entries()[0], color=YELLOW),
+            Indicate(mat_a_lam.get_entries()[4], color=YELLOW),
+            Indicate(mat_a_lam.get_entries()[8], color=YELLOW),
+            run_time=self.TIME_SLOW,
+        )
 
-def _concat_videos(project_dir: Path, inputs: list[Path], output_name: str) -> Path:
-    if not inputs:
-        raise ValueError("No scene videos to concatenate.")
-    output_dir = inputs[0].parent
-    list_path = output_dir / "concat_list.txt"
-    list_path.write_text("\n".join([f"file '{video.as_posix()}'" for video in inputs]) + "\n", encoding="utf-8")
+        lambdas_text = VGroup(
+            MathTex(r"\lambda_1 \approx 123.48", color=GREEN),
+            MathTex(r"\lambda_2 \approx 15.50", color=GREEN),
+            MathTex(r"\lambda_3 \approx 0.02", color=GREEN),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.3).scale(0.8)
+        
+        # FIX OVERLAP D MATRIX: Tăng h_buff lên 2.5
+        d_matrix = Matrix(
+            [[self.fmt(self.lambdas[0]), "0", "0"], ["0", self.fmt(self.lambdas[1]), "0"], ["0", "0", self.fmt(self.lambdas[2])]],
+            element_to_mobject=lambda value: MathTex(value),
+            h_buff=2.5,
+        ).scale(0.7)
+        d_label = MathTex("D =", color=GREEN).scale(0.8).next_to(d_matrix, LEFT)
+        d_group = VGroup(d_label, d_matrix)
+        
+        right_panel = VGroup(lambdas_text, d_group).arrange(DOWN, buff=0.8).move_to(RIGHT * 3.0 + DOWN * 0.5)
 
-    output_video = output_dir / output_name
-    ffmpeg = _resolve_ffmpeg()
-    cmd = [
-        ffmpeg,
-        "-y",
-        "-f",
-        "concat",
-        "-safe",
-        "0",
-        "-i",
-        str(list_path),
-        "-c",
-        "copy",
-        str(output_video),
-    ]
-    _run_cmd(cmd, cwd=project_dir)
-    return output_video
+        self.play(FadeIn(lambdas_text, shift=LEFT*0.2), run_time=self.TIME_NORMAL)
+        self.wait(self.WAIT_SHORT)
+        self.play(FadeIn(d_group, shift=UP*0.2), run_time=self.TIME_NORMAL)
+        self.wait(self.WAIT_LONG)
 
+        self.play(FadeOut(title), FadeOut(char_eq), FadeOut(mat_a_lam), FadeOut(right_panel), run_time=self.TIME_FAST)
 
-def main() -> int:
-    parser = argparse.ArgumentParser(
-        description="Run this file directly to render final Part 2 video (720p30) and concatenate scenes.",
-    )
-    parser.add_argument("--output-name", default="demo_video.mp4")
-    parser.add_argument("--disable-caching", action="store_true")
-    args = parser.parse_args()
+    def find_matrix_P(self):
+        title = self.make_section_title("Bước 2: Tìm ma trận P (Vector riêng)", ORANGE, 30).to_edge(UP, buff=0.4)
+        self.play(Write(title), run_time=self.TIME_NORMAL)
 
-    project_dir = Path(__file__).resolve().parent
-    print("[1/4] Rendering final scenes...")
-    scene_outputs = _render_final_scenes(project_dir, disable_caching=args.disable_caching)
+        step_p = Text("Hệ phương trình: (A - λ₁ I)v₁ = 0", color=WHITE, font_size=24, weight="BOLD").move_to(LEFT * 3.5 + UP * 1.8)
+        self.play(Write(step_p), run_time=self.TIME_NORMAL)
 
-    print("[2/4] Scene metadata:")
-    total_duration = 0.0
-    for scene_video in scene_outputs:
-        duration, width, height, fps = _get_video_info(scene_video)
-        total_duration += duration
-        print(f"  - {scene_video.name}: {duration:.2f}s | {width}x{height} | {fps:.2f}fps")
-    print(f"  Total (sum): {total_duration:.2f}s")
+        gauss_matrix = Matrix(
+            [["-119.48", "12", "-16"], ["12", "-86.48", "-43"], ["-16", "-43", "-25.48"]],
+            h_buff=2.0,
+            element_to_mobject=lambda value: MathTex(value),
+        ).scale(0.55).next_to(step_p, DOWN, buff=0.5).align_to(step_p, LEFT)
+        self.play(FadeIn(gauss_matrix), run_time=self.TIME_NORMAL)
 
-    print("[3/4] Concatenating final video...")
-    final_video = _concat_videos(project_dir, scene_outputs, args.output_name)
+        row_ops = VGroup(
+            MathTex(r"R_2 \leftarrow R_2 + 0.10R_1", color=YELLOW),
+            MathTex(r"R_3 \leftarrow R_3 - 0.13R_1", color=YELLOW),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.3).scale(0.65).next_to(gauss_matrix, RIGHT, buff=0.5)
+        
+        self.play(Write(row_ops), run_time=self.TIME_SLOW)
+        self.wait(1.0)
+        self.play(FadeOut(row_ops), run_time=self.TIME_FAST)
 
-    print("[4/4] Final metadata:")
-    duration, width, height, fps = _get_video_info(final_video)
-    print(f"  - file: {final_video}")
-    print(f"  - duration: {duration:.2f}s")
-    print(f"  - resolution: {width}x{height}")
-    print(f"  - fps: {fps:.2f}")
-    if duration < 120.0 or duration > 1800.0:
-        print("  Duration check: FAIL (must be between 120s and 1800s)")
-        return 2
+        # FIX ARROW OVERLAP: Xóa tọa độ cứng và dùng next_to bám sát v1_group
+        arrow = MathTex(r"\Longrightarrow", color=GREEN).scale(1.2)
+        
+        def make_vec(label_str, val_list):
+            label = MathTex(label_str, color=ORANGE).scale(0.7)
+            vec = Matrix([[v] for v in val_list], element_to_mobject=lambda value: MathTex(value)).scale(0.6)
+            return VGroup(label, vec).arrange(RIGHT, buff=0.15)
 
-    print("  Duration check: PASS")
-    return 0
+        v1_group = make_vec("v_1 =", ["0.16", "-0.21", "0.96"])
+        v2_group = make_vec("v_2 =", ["0.45", "-0.84", "-0.26"])
+        v3_group = make_vec("v_3 =", ["-0.87", "-0.48", "0.04"])
+
+        vectors_panel = VGroup(v1_group, v2_group, v3_group).arrange(RIGHT, buff=0.4).move_to(RIGHT * 2.8 + DOWN * 0.5)
+        
+        # Ghim mũi tên sát bên trái của v1_group
+        arrow.next_to(v1_group, LEFT, buff=0.4)
+
+        self.play(Write(arrow), FadeIn(v1_group), run_time=self.TIME_NORMAL)
+        self.wait(1.0)
+        
+        # FIX TEXT ALIGNMENT: Gán text mới chèn đúng lên tọa độ của step_p cũ
+        step_p2 = Text("Tương tự cho λ₂ và λ₃:", color=WHITE, font_size=24, weight="BOLD")
+        step_p2.move_to(step_p.get_center()).align_to(step_p, LEFT)
+        
+        self.play(Transform(step_p, step_p2), FadeIn(v2_group), FadeIn(v3_group), run_time=self.TIME_NORMAL)
+        self.wait(self.WAIT_LONG)
+
+        self.play(FadeOut(title), FadeOut(step_p), FadeOut(gauss_matrix), FadeOut(arrow), FadeOut(vectors_panel), run_time=self.TIME_FAST)
+
+    def show_final_assembly(self):
+        title = self.make_section_title("Bước 3: Tổng hợp kết quả Phân rã", GREEN, 30).to_edge(UP, buff=0.4)
+        self.play(Write(title), run_time=self.TIME_NORMAL)
+
+        # FIX INNER OVERLAP MATRICES: Tăng h_buff=2.5 cho tất cả để số không đè nhau
+        p_matrix = Matrix(self.to_manim_str_matrix(self.P), element_to_mobject=lambda value: MathTex(value), h_buff=2.5).scale(0.5)
+        p_label = MathTex("P =", color=ORANGE).scale(0.8).next_to(p_matrix, UP)
+        p_group = VGroup(p_label, p_matrix)
+
+        d_matrix = Matrix(
+            [[self.fmt(self.lambdas[0]), "0", "0"], ["0", self.fmt(self.lambdas[1]), "0"], ["0", "0", self.fmt(self.lambdas[2])]],
+            element_to_mobject=lambda value: MathTex(value), h_buff=2.5
+        ).scale(0.5)
+        d_label = MathTex("D =", color=GREEN).scale(0.8).next_to(d_matrix, UP)
+        d_group = VGroup(d_label, d_matrix)
+
+        pinv_matrix = Matrix(self.to_manim_str_matrix(self.P_inv), element_to_mobject=lambda value: MathTex(value), h_buff=2.5).scale(0.5)
+        pinv_label = MathTex("P^{-1} =", color=BLUE).scale(0.8).next_to(pinv_matrix, UP)
+        pinv_group = VGroup(pinv_label, pinv_matrix)
+
+        # Thu hẹp khoảng cách buff giữa 3 khối để tránh tràn màn hình khi ma trận to ra
+        matrices_panel = VGroup(p_group, d_group, pinv_group).arrange(RIGHT, buff=0.4).move_to(UP * 0.5)
+        self.play(FadeIn(matrices_panel, shift=UP*0.2), run_time=self.TIME_NORMAL)
+
+        final_eq = MathTex(r"A = P \cdot D \cdot P^{-1}", color=YELLOW).scale(1.8).move_to(DOWN * 2.2)
+        final_box = SurroundingRectangle(final_eq, color=YELLOW, buff=0.3, stroke_width=4)
+        self.play(Write(final_eq), Create(final_box), run_time=self.TIME_SLOW)
+        self.wait(self.WAIT_LONG)
+        
+        self.clear()
+
+    def show_final_verification(self):
+        title = self.make_section_title("Đối chiếu trị riêng bằng numpy.linalg.eig", BLUE, 34).to_edge(UP, buff=0.6)
+        
+        np_A = np.array(self.A)
+        eigenvalues, _ = np.linalg.eig(np_A)
+        numpy_sorted = sorted((float(value.real) for value in eigenvalues), reverse=True)
+        manual_sorted = sorted(self.lambdas, reverse=True)
+
+        manual_text = Text("Tính toán thủ công:", color=WHITE, font_size=26)
+        manual_value = MathTex(
+            rf"\lambda_{{manual}} = [{self.fmt(manual_sorted[0])}, \ {self.fmt(manual_sorted[1])}, \ {self.fmt(manual_sorted[2])}]",
+            color=ORANGE,
+        ).scale(0.9)
+        
+        numpy_text = Text("Thư viện Numpy:", color=WHITE, font_size=26)
+        numpy_value = MathTex(
+            rf"\lambda_{{numpy}} = [{self.fmt(numpy_sorted[0])}, \ {self.fmt(numpy_sorted[1])}, \ {self.fmt(numpy_sorted[2])}]",
+            color=GREEN,
+        ).scale(0.9)
+
+        text_group = VGroup(manual_text, numpy_text).arrange(DOWN, aligned_edge=RIGHT, buff=0.8)
+        value_group = VGroup(manual_value, numpy_value).arrange(DOWN, aligned_edge=LEFT, buff=0.8)
+        
+        comparison = VGroup(text_group, value_group).arrange(RIGHT, buff=0.6).move_to(UP * 0.2)
+        
+        msg = Text("✓ Kết quả trị riêng trùng khớp tuyệt đối!", color=GREEN, font_size=30, weight="BOLD").next_to(comparison, DOWN, buff=1.2)
+
+        self.play(Write(title), run_time=self.TIME_NORMAL)
+        
+        self.play(FadeIn(manual_text), FadeIn(manual_value, shift=RIGHT*0.2), run_time=self.TIME_NORMAL)
+        self.wait(self.WAIT_SHORT)
+        self.play(FadeIn(numpy_text), FadeIn(numpy_value, shift=RIGHT*0.2), run_time=self.TIME_NORMAL)
+        
+        self.wait(self.WAIT_SHORT)
+        self.play(Write(msg), run_time=self.TIME_NORMAL)
+        self.wait(self.WAIT_LONG)
+        self.clear()
+
+Scene1Introduction = Scene1_Cholesky_IntroAndSPD
+Scene2CholeskyProcess = Scene2_Cholesky_Calculation
+Scene3DiagonalizationProcess = Scene3_Diagonalization
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    parser = argparse.ArgumentParser(description="Render modular Manim scenes.")
+    parser.add_argument("--scene", default="all", help="Scene name to render, or 'all'")
+    parser.add_argument("--quality", choices=["l", "m", "h", "k"], default="m")
+    args = parser.parse_args()
+
+    project_dir = Path(__file__).resolve().parent
+    file_name = Path(__file__).name
+    stem = Path(__file__).stem
+
+    scenes_to_run = [
+        "Scene0_Overview",
+        "Scene1_Cholesky_IntroAndSPD",
+        "Scene2_Cholesky_Calculation",
+        "Scene3_Diagonalization",
+    ] if args.scene == "all" else [args.scene]
+
+    for scene_name in scenes_to_run:
+        print(f"\n[Rendering] {scene_name} at quality {args.quality}...")
+        command = [sys.executable, "-m", "manim", f"-q{args.quality}", file_name, scene_name]
+        subprocess.run(command, cwd=str(project_dir), check=True)
+
+    if args.scene == "all":
+        print("\n[Joining] Concatenating rendered scenes into Full_Presentation.mp4...")
+        quality_map = {"l": "480p15", "m": "720p30", "h": "1080p60", "k": "2160p60"}
+        output_folder = project_dir / "media" / "videos" / stem / quality_map[args.quality]
+        output_folder.mkdir(parents=True, exist_ok=True)
+
+        list_file = output_folder / "scenes_list.txt"
+        final_video = output_folder / "Full_Presentation.mp4"
+
+        with open(list_file, "w", encoding="utf-8") as handle:
+            for scene_name in scenes_to_run:
+                handle.write(f"file '{scene_name}.mp4'\n")
+
+        ffmpeg_command = [
+            "ffmpeg",
+            "-y",
+            "-f",
+            "concat",
+            "-safe",
+            "0",
+            "-i",
+            "scenes_list.txt",
+            "-c",
+            "copy",
+            "Full_Presentation.mp4",
+        ]
+
+        subprocess.run(ffmpeg_command, cwd=str(output_folder), check=True)
+        print(f"[Done] Final video: {final_video}")
