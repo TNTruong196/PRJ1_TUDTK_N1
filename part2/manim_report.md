@@ -1,4 +1,4 @@
-# BÁO CÁO PHÂN TÍCH KỸ THUẬT 
+# BÁO CÁO PHÂN TÍCH KICH BAN VA KỸ THUAT
 **Chủ đề: Ứng dụng thư viện Manim trong trực quan hóa thuật toán Phân rã Cholesky và Chéo hóa Ma trận**
 
 ---
