@@ -1,6 +1,7 @@
 import os
 import sys
 import unittest
+import math
 from numbers import Real
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -208,6 +209,7 @@ class TestCholeskySolvers(unittest.TestCase):
 def solve_gauss_seidel(
     A,
     b,
+    x0=None,
     tolerance=1e-10,
     max_iterations=1000,
     require_convergence_check=True,
@@ -236,8 +238,15 @@ def solve_gauss_seidel(
         if verbose:
             print(f"[Gauss-Seidel] Canh bao: {msg}")
 
-    # 1. Khởi tạo vector nghiệm x ban đầu là mảng chứa n số 0.0
-    x = [0.0] * n
+    # 1. Khởi tạo vector nghiệm ban đầu
+    if x0 is None:
+        x = [0.0] * n
+    else:
+        x = to_vector(x0)
+        if len(x) != n:
+            raise ValueError("kich thuoc x0 khong phu hop voi A")
+        if any(not math.isfinite(value) for value in x):
+            raise ValueError("x0 phai chua cac gia tri huu han")
     
     for k in range(max_iterations):
         max_diff = 0.0
@@ -254,16 +263,24 @@ def solve_gauss_seidel(
 
             old_xi = x[i]
             new_xi = (b_list[i] - lower_sum - upper_sum) / row_i[i]
+            if not math.isfinite(new_xi):
+                raise OverflowError("Gauss-Seidel diverged or overflowed")
             x[i] = new_xi
 
             diff = abs(new_xi - old_xi)
             if diff > max_diff:
                 max_diff = diff
+
+        if not math.isfinite(max_diff):
+            raise OverflowError("Gauss-Seidel diverged or overflowed")
         
         if max_diff < tolerance:
             if verbose:
                 print(f"[Gauss-Seidel] Đã hội tụ sau {k+1} vòng lặp.")
             return x
+
+        if any(not math.isfinite(value) for value in x):
+            raise OverflowError("Gauss-Seidel diverged or overflowed")
             
     if verbose:
         print("[Gauss-Seidel] Cảnh báo: Vượt quá số vòng lặp tối đa mà chưa hội tụ.")
