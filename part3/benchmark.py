@@ -67,101 +67,108 @@ def generate_hilbert_pure_python(n):
 # =====================================================================
 # 3. HÀM CHẠY BENCHMARK
 # =====================================================================
+def _build_cases(n_list, num_runs):
+    cases = {"SPD": {}, "Hilbert": {}}
+    for n in n_list:
+        spd_runs = []
+        hilbert_runs = []
+        for _ in range(num_runs):
+            A_spd = generate_spd_pure_python(n)
+            b_spd = [random.uniform(0, 1) for _ in range(n)]
+            spd_runs.append((A_spd, b_spd))
+
+            A_h = generate_hilbert_pure_python(n)
+            b_h = [random.uniform(0, 1) for _ in range(n)]
+            hilbert_runs.append((A_h, b_h))
+
+        cases["SPD"][n] = spd_runs
+        cases["Hilbert"][n] = hilbert_runs
+    return cases
+
+
 def run_benchmark():
-    # Yêu cầu của đề bài: n in {50, 100, 200, 500, 1000}
-    # CẢNH BÁO: Vì code thuần Python, n=1000 sẽ chạy khá lâu.
+    # Yêu cầu đề bài: n in {50, 100, 200, 500, 1000}, trung bình 5 lần chạy.
     n_list = [50, 100, 200, 500, 1000]
     num_runs = 5
-    
+    random.seed(42)
+
+    # Cau hinh "im lang" cho Gauss-Seidel khi benchmark.
+    gauss_seidel_for_benchmark = lambda A, b: solve_gauss_seidel(
+        A,
+        b,
+        tolerance=1e-8,
+        max_iterations=400,
+        require_convergence_check=False,
+        verbose=False,
+    )
+
     methods = [
         ("Khử Gauss", solve_via_gauss),
         ("Phân rã Cholesky", solve_via_cholesky),
         ("Hệ PT Chuẩn (Normal Eq)", solve_via_normal_equations),
-        ("Lặp Gauss-Seidel", solve_gauss_seidel)
+        ("Lặp Gauss-Seidel", gauss_seidel_for_benchmark),
     ]
 
     print("========== BẮT ĐẦU BENCHMARK ==========\n")
     print("Sai số tương đối sử dụng công thức: ||A x_hat - b||_2 / ||b||_2")
 
-    for n in n_list:
-        print(f"\n[{'='*10} ĐANG XỬ LÝ KÍCH THƯỚC N = {n} {'='*10}]")
-        
-        # --- KỊCH BẢN 1: SPD ---
-        print(">>> Ma trận SPD (Well-conditioned)")
-        for name, func in methods:
-            total_time = 0.0
-            total_error = 0.0
-            success_runs = 0
-            failed_runs = 0
-            last_error = ""
-            
-            for _ in range(num_runs):
-                A = generate_spd_pure_python(n)
-                b = [random.uniform(0, 1) for _ in range(n)]
-                
-                # Copy để tránh thay đổi ma trận gốc
-                A_copy = [row[:] for row in A]
-                b_copy = b[:]
-                
-                start = time.time()
-                try:
-                    x_hat = func(A_copy, b_copy)
-                    total_time += (time.time() - start)
-                    total_error += calc_relative_error(A, x_hat, b)
-                    success_runs += 1
-                except Exception as exc:
-                    failed_runs += 1
-                    last_error = str(exc)
-            
-            if success_runs > 0:
-                avg_time = total_time / success_runs
-                avg_err = total_error / success_runs
-                print(
-                    f" - {name:25}: {avg_time:8.4f}s | Sai số: {avg_err:.2e} "
-                    f"| Thanh cong: {success_runs}/{num_runs}"
-                )
-                if failed_runs > 0:
-                    print(f"   Canh bao: {failed_runs} lan loi. Vi du loi: {last_error}")
-            else:
-                print(f" - {name:25}: THAT BAI (0/{num_runs}). Vi du loi: {last_error}")
+    cases = _build_cases(n_list, num_runs)
+    results = {
+        "SPD": {name: {} for name, _ in methods},
+        "Hilbert": {name: {} for name, _ in methods},
+    }
 
-        # --- KỊCH BẢN 2: HILBERT ---
-        print("\n>>> Ma trận Hilbert (Ill-conditioned)")
-        for name, func in methods:
-            total_time = 0.0
-            total_error = 0.0
-            success_runs = 0
-            failed_runs = 0
-            last_error = ""
-            
-            for _ in range(num_runs):
-                A = generate_hilbert_pure_python(n)
-                b = [random.uniform(0, 1) for _ in range(n)]
-                
-                A_copy = [row[:] for row in A]
-                b_copy = b[:]
-                
-                start = time.time()
-                try:
-                    x_hat = func(A_copy, b_copy)
-                    total_time += (time.time() - start)
-                    total_error += calc_relative_error(A, x_hat, b)
-                    success_runs += 1
-                except Exception as exc:
-                    failed_runs += 1
-                    last_error = str(exc)
-            
-            if success_runs > 0:
-                avg_time = total_time / success_runs
-                avg_err = total_error / success_runs
-                print(
-                    f" - {name:25}: {avg_time:8.4f}s | Sai số: {avg_err:.2e} "
-                    f"| Thanh cong: {success_runs}/{num_runs}"
-                )
-                if failed_runs > 0:
-                    print(f"   Canh bao: {failed_runs} lan loi. Vi du loi: {last_error}")
-            else:
-                print(f" - {name:25}: THAT BAI (0/{num_runs}). Vi du loi: {last_error}")
+    for matrix_kind in ["SPD", "Hilbert"]:
+        label = "Well-conditioned" if matrix_kind == "SPD" else "Ill-conditioned"
+        print(f"\n>>> Ma tran {matrix_kind} ({label})")
+
+        for n in n_list:
+            print(f"\n[{'='*10} n = {n} {'='*10}]")
+            run_cases = cases[matrix_kind][n]
+
+            for name, func in methods:
+                total_time = 0.0
+                total_error = 0.0
+                success_runs = 0
+                failed_runs = 0
+                last_error = ""
+
+                for A, b in run_cases:
+                    A_copy = [row[:] for row in A]
+                    b_copy = b[:]
+
+                    start = time.perf_counter()
+                    try:
+                        x_hat = func(A_copy, b_copy)
+                        elapsed = time.perf_counter() - start
+                        total_time += elapsed
+                        total_error += calc_relative_error(A, x_hat, b)
+                        success_runs += 1
+                    except Exception as exc:
+                        failed_runs += 1
+                        last_error = str(exc)
+
+                avg_time = (total_time / success_runs) if success_runs > 0 else None
+                avg_err = (total_error / success_runs) if success_runs > 0 else None
+                results[matrix_kind][name][n] = {
+                    "avg_time": avg_time,
+                    "avg_error": avg_err,
+                    "success_runs": success_runs,
+                    "failed_runs": failed_runs,
+                    "last_error": last_error,
+                }
+
+                if success_runs > 0:
+                    print(
+                        f" - {name:25}: {avg_time:8.4f}s | Sai so: {avg_err:.2e} "
+                        f"| Thanh cong: {success_runs}/{num_runs}"
+                    )
+                    if failed_runs > 0:
+                        print(f"   Canh bao: {failed_runs} lan loi. Vi du loi: {last_error}")
+                else:
+                    print(f" - {name:25}: THAT BAI (0/{num_runs}). Vi du loi: {last_error}")
+
+    return results
 
 if __name__ == "__main__":
     run_benchmark()

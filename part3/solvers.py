@@ -44,7 +44,7 @@ def backward_substitution(U, y):
 def solve_via_gauss(A, b):
     A_list = to_matrix(A, error_message="Input matrix must be non-empty and rectangular.")
     b_list = to_vector(b)
-    _, x, _ = gaussian_eliminate(A_list, b_list)
+    _, x, _ = gaussian_eliminate(A_list, b_list, verbose=False)
     n_cols = len(A_list[0])
     # gaussian_eliminate returns a parametric expression for non-unique systems.
     # In Part 3, this solver only accepts a unique numeric solution vector.
@@ -61,6 +61,8 @@ def solve_via_gauss(A, b):
 def solve_via_cholesky(A, b):
     A_list = to_matrix(A, require_square=True, error_message="Input matrix must be a non-empty square matrix.")
     b_list = to_vector(b)
+    if len(b_list) != len(A_list):
+        raise ValueError("kich thuoc b khong phu hop voi A")
     L = cholesky_custom(A_list)
     y = forward_substitution(L, b_list)
     x = backward_substitution(transpose(L), y)
@@ -70,6 +72,8 @@ def solve_via_cholesky(A, b):
 def solve_via_normal_equations(A, b):
     A_list = to_matrix(A, error_message="Input matrix must be non-empty and rectangular.")
     b_list = to_vector(b)
+    if len(b_list) != len(A_list):
+        raise ValueError("kich thuoc b khong phu hop voi A")
 
     A_t = transpose(A_list)
     M = matmul(A_t, A_list)
@@ -207,6 +211,8 @@ def solve_gauss_seidel(
     tolerance=1e-10,
     max_iterations=1000,
     require_convergence_check=True,
+    strict_convergence=False,
+    verbose=True,
 ):
     """
     Giải hệ phương trình tuyến tính Ax = b bằng phương pháp lặp Gauss-Seidel.
@@ -223,45 +229,44 @@ def solve_gauss_seidel(
         if abs(A_list[i][i]) <= eps:
             raise ValueError("he co phan tu duong cheo bang 0, khong the ap dung Gauss-Seidel")
 
-    if require_convergence_check:
-        is_diag_dom = _is_strictly_diagonally_dominant(A_list)
-        is_spd = False
-        if not is_diag_dom:
-            try:
-                cholesky_custom(A_list)
-                is_spd = True
-            except ValueError:
-                is_spd = False
-        if not (is_diag_dom or is_spd):
-            raise ValueError(
-                "Gauss-Seidel may not converge: A is neither strictly diagonally dominant nor SPD"
-            )
+    if require_convergence_check and not _is_strictly_diagonally_dominant(A_list):
+        msg = "Gauss-Seidel convergence is not guaranteed (matrix is not strictly diagonally dominant)."
+        if strict_convergence:
+            raise ValueError(msg)
+        if verbose:
+            print(f"[Gauss-Seidel] Canh bao: {msg}")
 
     # 1. Khởi tạo vector nghiệm x ban đầu là mảng chứa n số 0.0
     x = [0.0] * n
     
     for k in range(max_iterations):
-        # 2. Tạo bản sao của x để lưu lại kết quả của bước lặp trước đó
-        x_old = list(x)
-        
+        max_diff = 0.0
+
         for i in range(n):
-            # Tính tổng các phần tử đã được cập nhật trong bước lặp hiện tại (k+1)
-            sum_new = sum(A_list[i][j] * x[j] for j in range(i))
-            # Tính tổng các phần tử chưa được cập nhật (đang ở bước k)
-            sum_old = sum(A_list[i][j] * x_old[j] for j in range(i + 1, n))
-            
-            # Cập nhật x[i]
-            x[i] = (b_list[i] - sum_new - sum_old) / A_list[i][i]
-            
-        # 3. Kiểm tra điều kiện hội tụ (sai số tuyệt đối lớn nhất - chuẩn vô cùng)
-        # Thay thế cho np.linalg.norm(x - x_old, ord=np.inf)
-        max_diff = max(abs(x[idx] - x_old[idx]) for idx in range(n))
+            row_i = A_list[i]
+            lower_sum = 0.0
+            for j in range(i):
+                lower_sum += row_i[j] * x[j]
+
+            upper_sum = 0.0
+            for j in range(i + 1, n):
+                upper_sum += row_i[j] * x[j]
+
+            old_xi = x[i]
+            new_xi = (b_list[i] - lower_sum - upper_sum) / row_i[i]
+            x[i] = new_xi
+
+            diff = abs(new_xi - old_xi)
+            if diff > max_diff:
+                max_diff = diff
         
         if max_diff < tolerance:
-            print(f"[Gauss-Seidel] Đã hội tụ sau {k+1} vòng lặp.")
+            if verbose:
+                print(f"[Gauss-Seidel] Đã hội tụ sau {k+1} vòng lặp.")
             return x
             
-    print("[Gauss-Seidel] Cảnh báo: Vượt quá số vòng lặp tối đa mà chưa hội tụ.")
+    if verbose:
+        print("[Gauss-Seidel] Cảnh báo: Vượt quá số vòng lặp tối đa mà chưa hội tụ.")
     return x
 
 if __name__ == "__main__":
