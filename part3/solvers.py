@@ -1,6 +1,7 @@
 import os
 import sys
 import unittest
+from numbers import Real
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
@@ -44,9 +45,17 @@ def solve_via_gauss(A, b):
     A_list = to_matrix(A, error_message="Input matrix must be non-empty and rectangular.")
     b_list = to_vector(b)
     _, x, _ = gaussian_eliminate(A_list, b_list)
-    if x is None:
+    n_cols = len(A_list[0])
+    # gaussian_eliminate returns a parametric expression for non-unique systems.
+    # In Part 3, this solver only accepts a unique numeric solution vector.
+    if (
+        x is None
+        or not isinstance(x, list)
+        or len(x) != n_cols
+        or any(not isinstance(v, Real) for v in x)
+    ):
         raise ValueError("he khong co nghiem duy nhat")
-    return x
+    return [float(v) for v in x]
 
 
 def solve_via_cholesky(A, b):
@@ -70,6 +79,16 @@ def solve_via_normal_equations(A, b):
     y = forward_substitution(L, c)
     x = backward_substitution(transpose(L), y)
     return x
+
+
+def _is_strictly_diagonally_dominant(A, eps=1e-12):
+    n = len(A)
+    for i in range(n):
+        diag = abs(A[i][i])
+        off_sum = sum(abs(A[i][j]) for j in range(n) if j != i)
+        if diag <= off_sum + eps:
+            return False
+    return True
 
 
 class TestCholeskySolvers(unittest.TestCase):
@@ -182,12 +201,42 @@ class TestCholeskySolvers(unittest.TestCase):
         with self.assertRaises(ValueError):
             solve_via_gauss(self.A_dependent, self.b_dependent)
 
-def solve_gauss_seidel(A, b, tolerance=1e-10, max_iterations=1000):
+def solve_gauss_seidel(
+    A,
+    b,
+    tolerance=1e-10,
+    max_iterations=1000,
+    require_convergence_check=True,
+):
     """
     Giải hệ phương trình tuyến tính Ax = b bằng phương pháp lặp Gauss-Seidel.
     (Phiên bản thuần Python, không sử dụng thư viện ngoài)
     """
-    n = len(A)
+    A_list = to_matrix(A, require_square=True, error_message="Input matrix must be a non-empty square matrix.")
+    b_list = to_vector(b)
+    n = len(A_list)
+    if len(b_list) != n:
+        raise ValueError("kich thuoc b khong phu hop voi A")
+
+    eps = 1e-12
+    for i in range(n):
+        if abs(A_list[i][i]) <= eps:
+            raise ValueError("he co phan tu duong cheo bang 0, khong the ap dung Gauss-Seidel")
+
+    if require_convergence_check:
+        is_diag_dom = _is_strictly_diagonally_dominant(A_list)
+        is_spd = False
+        if not is_diag_dom:
+            try:
+                cholesky_custom(A_list)
+                is_spd = True
+            except ValueError:
+                is_spd = False
+        if not (is_diag_dom or is_spd):
+            raise ValueError(
+                "Gauss-Seidel may not converge: A is neither strictly diagonally dominant nor SPD"
+            )
+
     # 1. Khởi tạo vector nghiệm x ban đầu là mảng chứa n số 0.0
     x = [0.0] * n
     
@@ -197,12 +246,12 @@ def solve_gauss_seidel(A, b, tolerance=1e-10, max_iterations=1000):
         
         for i in range(n):
             # Tính tổng các phần tử đã được cập nhật trong bước lặp hiện tại (k+1)
-            sum_new = sum(A[i][j] * x[j] for j in range(i))
+            sum_new = sum(A_list[i][j] * x[j] for j in range(i))
             # Tính tổng các phần tử chưa được cập nhật (đang ở bước k)
-            sum_old = sum(A[i][j] * x_old[j] for j in range(i + 1, n))
+            sum_old = sum(A_list[i][j] * x_old[j] for j in range(i + 1, n))
             
             # Cập nhật x[i]
-            x[i] = (b[i] - sum_new - sum_old) / A[i][i]
+            x[i] = (b_list[i] - sum_new - sum_old) / A_list[i][i]
             
         # 3. Kiểm tra điều kiện hội tụ (sai số tuyệt đối lớn nhất - chuẩn vô cùng)
         # Thay thế cho np.linalg.norm(x - x_old, ord=np.inf)

@@ -35,10 +35,15 @@ def norm_2(v):
 
 def calc_relative_error(A, x_hat, b):
     """Tính sai số tương đối: ||Ax_hat - b||_2 / ||b||_2"""
-    if x_hat is None: return float('inf')
+    if x_hat is None:
+        return float('inf')
     Ax = mat_vec_mult(A, x_hat)
     residual = vec_sub(Ax, b)
-    return norm_2(residual) / norm_2(b)
+    b_norm = norm_2(b)
+    if b_norm == 0.0:
+        # Neu b = 0, dung residual norm de danh gia do chinh xac tuyet doi
+        return norm_2(residual)
+    return norm_2(residual) / b_norm
 
 # =====================================================================
 # 2. HAI HÀM SINH MA TRẬN DỮ LIỆU (THUẦN PYTHON)
@@ -64,8 +69,8 @@ def generate_hilbert_pure_python(n):
 # =====================================================================
 def run_benchmark():
     # Yêu cầu của đề bài: n in {50, 100, 200, 500, 1000}
-    # CẢNH BÁO: Vì code thuần Python, n=500 và n=1000 sẽ chạy khá lâu.
-    n_list = [50, 100, 200, 500] 
+    # CẢNH BÁO: Vì code thuần Python, n=1000 sẽ chạy khá lâu.
+    n_list = [50, 100, 200, 500, 1000]
     num_runs = 5
     
     methods = [
@@ -76,6 +81,7 @@ def run_benchmark():
     ]
 
     print("========== BẮT ĐẦU BENCHMARK ==========\n")
+    print("Sai số tương đối sử dụng công thức: ||A x_hat - b||_2 / ||b||_2")
 
     for n in n_list:
         print(f"\n[{'='*10} ĐANG XỬ LÝ KÍCH THƯỚC N = {n} {'='*10}]")
@@ -86,6 +92,8 @@ def run_benchmark():
             total_time = 0.0
             total_error = 0.0
             success_runs = 0
+            failed_runs = 0
+            last_error = ""
             
             for _ in range(num_runs):
                 A = generate_spd_pure_python(n)
@@ -101,15 +109,21 @@ def run_benchmark():
                     total_time += (time.time() - start)
                     total_error += calc_relative_error(A, x_hat, b)
                     success_runs += 1
-                except Exception:
-                    pass
+                except Exception as exc:
+                    failed_runs += 1
+                    last_error = str(exc)
             
             if success_runs > 0:
                 avg_time = total_time / success_runs
                 avg_err = total_error / success_runs
-                print(f" - {name:25}: {avg_time:8.4f}s | Sai số: {avg_err:.2e}")
+                print(
+                    f" - {name:25}: {avg_time:8.4f}s | Sai số: {avg_err:.2e} "
+                    f"| Thanh cong: {success_runs}/{num_runs}"
+                )
+                if failed_runs > 0:
+                    print(f"   Canh bao: {failed_runs} lan loi. Vi du loi: {last_error}")
             else:
-                print(f" - {name:25}: THẤT BẠI")
+                print(f" - {name:25}: THAT BAI (0/{num_runs}). Vi du loi: {last_error}")
 
         # --- KỊCH BẢN 2: HILBERT ---
         print("\n>>> Ma trận Hilbert (Ill-conditioned)")
@@ -117,6 +131,8 @@ def run_benchmark():
             total_time = 0.0
             total_error = 0.0
             success_runs = 0
+            failed_runs = 0
+            last_error = ""
             
             for _ in range(num_runs):
                 A = generate_hilbert_pure_python(n)
@@ -131,15 +147,21 @@ def run_benchmark():
                     total_time += (time.time() - start)
                     total_error += calc_relative_error(A, x_hat, b)
                     success_runs += 1
-                except Exception:
-                    pass
+                except Exception as exc:
+                    failed_runs += 1
+                    last_error = str(exc)
             
             if success_runs > 0:
                 avg_time = total_time / success_runs
                 avg_err = total_error / success_runs
-                print(f" - {name:25}: {avg_time:8.4f}s | Sai số: {avg_err:.2e}")
+                print(
+                    f" - {name:25}: {avg_time:8.4f}s | Sai số: {avg_err:.2e} "
+                    f"| Thanh cong: {success_runs}/{num_runs}"
+                )
+                if failed_runs > 0:
+                    print(f"   Canh bao: {failed_runs} lan loi. Vi du loi: {last_error}")
             else:
-                print(f" - {name:25}: THẤT BẠI (Lỗi suy biến/toán học)")
+                print(f" - {name:25}: THAT BAI (0/{num_runs}). Vi du loi: {last_error}")
 
 if __name__ == "__main__":
     run_benchmark()

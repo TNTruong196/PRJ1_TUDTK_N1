@@ -1,5 +1,10 @@
 import copy
 
+try:
+    from .matrix_utils import to_matrix, to_vector
+except ImportError:
+    from matrix_utils import to_matrix, to_vector
+
 def _back_substitution_general(U, c, pivot_cols, n, eps=1e-9):
     # Biến tự do là những cột không chứa phần tử pivot
     free_vars = [j for j in range(n) if j not in pivot_cols]
@@ -34,7 +39,7 @@ def _back_substitution_general(U, c, pivot_cols, n, eps=1e-9):
     x_str = []
     for i in range(n):
         if i in free_vars:
-            x_str.append(f"t_{i+1} (biến tự do)")
+            x_str.append(f"t_{i+1}")
         else:
             terms = []
             const = x_dict[i].get('const', 0.0)
@@ -73,29 +78,40 @@ def _back_substitution_square(U, c, eps=1e-9):
     return x
 
 
+def back_substitution(U, c, eps=1e-9):
+    """Giai he tam giac tren Ux=c cho nghiem duy nhat.
+
+    Day la ham cong khai theo yeu cau de bai.
+    """
+    U_m = to_matrix(U, require_square=True, error_message="ma tran U khong hop le")
+    c_v = to_vector(c)
+    n = len(U_m)
+    if len(c_v) != n:
+        raise ValueError("kich thuoc c khong phu hop voi U")
+    return _back_substitution_square(U_m, c_v, eps=eps)
+
+
 def gaussian_eliminate(A, b, verbose=True):
     """Khử Gauss partial pivot cho ma trận m x n.
 
     Tra ve (M, x, swaps):
     - M: ma tran sau khử.
-    - x: nghiem duy nhat neu ton tai.
+    - x:
+        + nghiem duy nhat (list[float]) neu he co nghiem duy nhat,
+        + nghiem tong quat (list[str]) neu he vo so nghiem,
+        + None neu he vo nghiem.
     - swaps: so lan hoan vi dong.
     """
-    if not A or not isinstance(A, list) or not isinstance(b, list):
-        raise ValueError("du lieu dau vao khong hop le")
+    M = to_matrix(A, error_message="du lieu dau vao khong hop le")
+    c = to_vector(b)
 
-    m = len(A)
-    if not isinstance(A[0], list) or len(A[0]) == 0:
-        raise ValueError("ma tran A phai co it nhat 1 cot")
-
-    n = len(A[0])
-    if any(len(row) != n for row in A):
-        raise ValueError("ma tran A phai la ma tran chu nhat")
-    if len(b) != m:
+    m = len(M)
+    n = len(M[0])
+    if len(c) != m:
         raise ValueError("kich thuoc b khong phu hop voi so dong cua A")
 
-    M = copy.deepcopy([[float(v) for v in row] for row in A])
-    c = copy.deepcopy([float(v) for v in b])
+    M = copy.deepcopy(M)
+    c = copy.deepcopy(c)
     eps = 1e-9
     swaps = 0
 
@@ -150,9 +166,12 @@ def gaussian_eliminate(A, b, verbose=True):
 
     # Nếu hệ vuông và đủ rank -> nghiệm duy nhất
     if len(pivot_cols) == n:
-        x = _back_substitution_square(U[:n], c[:n], eps=eps)
+        x = back_substitution(U[:n], c[:n], eps=eps)
     else:
         # Nếu vô số nghiệm -> trả về công thức tổng quát
         x = _back_substitution_general(U, c, pivot_cols, n, eps=eps)
+        if verbose:
+            for idx, expr in enumerate(x, start=1):
+                print(f"x_{idx} = {expr}")
 
     return M, x, swaps
