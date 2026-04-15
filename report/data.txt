@@ -1,0 +1,33 @@
+========== BENCHMARK RANDOM ==========
+Ma tran su dung trong benchmark nay la ma tran ngau nhien thuong (khong rang buoc SPD).
+Sai so tuong doi: ||A x_hat - b||_2 / ||b||_2
+
+[========== n = 50 ==========]
+ - Khử Gauss                :   0.0032s | Sai so: 3.29e-16 | Thanh cong: 5/5
+ - Phân rã Cholesky         : THAT BAI (0/5). Vi du loi: Matrix must be symmetric.
+ - Hệ PT Chuẩn (Cholesky)   :   0.0090s | Sai so: 2.82e-16 | Thanh cong: 5/5
+ - Lặp Gauss-Seidel         :   0.0007s | Sai so: 1.95e-09 | Thanh cong: 5/5
+
+[========== n = 100 ==========]
+ - Khử Gauss                :   0.0202s | Sai so: 4.83e-16 | Thanh cong: 5/5
+ - Phân rã Cholesky         : THAT BAI (0/5). Vi du loi: Matrix must be symmetric.
+ - Hệ PT Chuẩn (Cholesky)   :   0.0732s | Sai so: 4.03e-16 | Thanh cong: 5/5
+ - Lặp Gauss-Seidel         :   0.0027s | Sai so: 1.52e-09 | Thanh cong: 5/5
+
+[========== n = 200 ==========]
+ - Khử Gauss                :   0.1777s | Sai so: 7.18e-16 | Thanh cong: 5/5
+ - Phân rã Cholesky         : THAT BAI (0/5). Vi du loi: Matrix must be symmetric.
+ - Hệ PT Chuẩn (Cholesky)   :   0.5643s | Sai so: 4.79e-16 | Thanh cong: 5/5
+ - Lặp Gauss-Seidel         :   0.0092s | Sai so: 3.82e-09 | Thanh cong: 5/5
+
+[========== n = 500 ==========]
+ - Khử Gauss                :   2.9023s | Sai so: 1.14e-15 | Thanh cong: 5/5
+ - Phân rã Cholesky         : THAT BAI (0/5). Vi du loi: Matrix must be symmetric.
+ - Hệ PT Chuẩn (Cholesky)   :   9.1724s | Sai so: 6.91e-16 | Thanh cong: 5/5
+ - Lặp Gauss-Seidel         :   0.0608s | Sai so: 1.07e-08 | Thanh cong: 5/5
+
+[========== n = 1000 ==========]
+ - Khử Gauss                :  23.4276s | Sai so: 1.61e-15 | Thanh cong: 5/5
+ - Phân rã Cholesky         : THAT BAI (0/5). Vi du loi: Matrix must be symmetric.
+ - Hệ PT Chuẩn (Cholesky)   :  82.0891s | Sai so: 9.79e-16 | Thanh cong: 5/5
+ - Lặp Gauss-Seidel         :   0.2480s | Sai so: 2.62e-09 | Thanh cong: 5/5
