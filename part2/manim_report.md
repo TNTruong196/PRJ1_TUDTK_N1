@@ -99,3 +99,14 @@ Kịch bản không viết code tràn lan mà sử dụng mô hình OOP. Lớp `
 * **Hiệu suất đột phá:** Thay vì phải mở các phần mềm dựng phim nặng nề (Premiere, Camtasia) để ghép 4 video lại với nhau, hệ thống Python tự động ráp nối chúng trong thời gian *dưới 1 giây* mà không làm giảm chất lượng khung hình. Quá trình xuất bản video (End-to-end) được tự động hóa 100%.
 
 ---
+
+## 7. Kết luận
+
+Thông qua việc phân tích mã nguồn `manim_scene.py`, có thể thấy việc ứng dụng Manim vào giảng dạy Đại số tuyến tính mang lại hiệu quả trực quan vượt trội so với các phương pháp truyền thống. 
+
+Dự án đã đáp ứng tốt hai tiêu chí cốt lõi: **độ chính xác về mặt toán học** (được kiểm chứng chéo với `numpy`) và **độ tối ưu về mặt hiển thị** (bố cục ma trận rõ ràng, nhịp độ chuyển cảnh hợp lý, không xảy ra lỗi đồ họa). Các rào cản nhận thức của người học đã được tháo gỡ đáng kể nhờ kỹ thuật điều hướng sự chú ý và diễn hoạt dòng chảy dữ liệu trực tiếp trên màn hình.
+
+---
+
+## 8. Khó khăn gặp phải
+Việc lên kịch bản và tinh chỉnh code để các phân đoạn, hoạt ảnh diễn ra mượt mà, không bị xung đột đã làm rất mất nhiều thời gian và công sức.
