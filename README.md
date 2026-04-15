@@ -99,7 +99,7 @@ Trước khi bắt đầu, hãy đảm bảo hệ thống của bạn có:
 
 Nếu dự án được lưu trên Git:
 ```bash
-git clone <đường_dẫn_repository>
+git clone https://github.com/TNTruong196/PRJ1_TUDTK_N1.git
 cd PRJ1_TUDTK_N1
 ```
 
@@ -226,7 +226,7 @@ File Notebook này sẽ đọc dữ liệu từ benchmark, phân tích và vẽ 
 
 ```
 PRJ1_TUDTK_N1/
-├── part1/                      # Phần 1: Phép khử Gauss
+├── part1/                    
 │   ├── gaussian.py
 │   ├── determinant.py
 │   ├── inverse.py
@@ -234,28 +234,28 @@ PRJ1_TUDTK_N1/
 │   ├── matrix_utils.py
 │   ├── part1_demo.ipynb
 │   └── Nhat_report.md
-├── part2/                      # Phần 2: Chéo hóa & Manim
+├── part2/                      
 │   ├── diagonalization.py
 │   ├── decomposition.py
 │   ├── manim_scene.py
 │   ├── manim_report.md
 │   ├── guide_run_manim_scene1.md
 │   └── tasks.md
-├── part3/                      # Phần 3: Benchmark & Phân tích
+├── part3/                    
 │   ├── solvers.py
 │   ├── benchmark.py
 │   ├── analysis.ipynb
 │   └── report_p3.md
-├── report/                     # Thư mục báo cáo cuối cùng
+├── report/                  
 │   ├── report.tex
 │   ├── data.txt
 │   ├── data2.txt
 │   └── images/
-├── requirements.txt            # Danh sách thư viện
-├── README.md                   # File này
-├── debai.md                    # Đề bài dự án
-├── manim.md                    # Tài liệu về Manim
-└── reportP2_Truong.md         # Báo cáo bổ sung
+├── requirements.txt        
+├── README.md                
+├── debai.md                 
+├── manim.md               
+└── reportP2_Truong.md     
 ```
 
 ---
