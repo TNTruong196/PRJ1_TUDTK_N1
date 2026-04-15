@@ -62,7 +62,24 @@ Phân tích thực nghiệm tính ổn định và hiệu năng của các phư�
 - Input: Kích thước ma trận $n$.
 - Output: Ma trận Hilbert hoặc ma trận Xác định dương (SPD).
 - Ý tưởng & Thuật toán:
-    -   Ma trận Hilbert: Sử dụng công thức $H_{i,j} = \frac{1}{i + j + 1}$ (với $0 \le i, j < n$). Đây là ma trận cực kỳ nhạy cảm với sai số (ill-conditioned), dùng để thử thách độ chính xác của hàm `inverse.py`.
+    -   Ma trận Hilbert: Sử dụng công thức $H_{i,j} = \frac{1}{i + j + 1}$ (với $0 \le i, j < n$). Đây là ma trận cực kỳ nhạy cảm với sai số (ill-conditioned), dùng để thử độ chính xác của hàm `inverse.py`.
     -   Ma trận SPD: 1. Sinh ma trận ngẫu nhiên $M$.
         2. Tính $A = M^T M$ (tạo ma trận đối xứng nửa xác định dương).
         3. Cộng thêm $n \cdot I$ (với $I$ là ma trận đơn vị) vào $A$ để đảm bảo tất cả các trị riêng đều dương, tạo ra ma trận xác định dương.
+        
+
+### Bài học rút ra
+- Biết cách đưa các thuật toán của đại số tuyến tính vào Python.
+- Biết cách kiểm thử độ chính xác của cài đặt thuật toán.
+- Hiểu rõ tầm quan trọng của việc chọn phần tử trục (pivoting) trong việc giảm thiểu sai số làm tròn khi làm việc với số thực trên máy tính.
+- Nhận thức được sự khác biệt giữa lý thuyết toán học thuần túy và tính toán số học thực tế, đặc biệt là khái niệm "số không" (epsilon) trong lập trình.
+- Thấy được tác động của số điều kiện thông qua ma trận Hilbert đối với độ chính xác của các thuật toán giải hệ phương trình tuyến tính.
+
+### Khó khăn gặp phải
+- Xử lý sai số dấu phẩy động: Trong quá trình khử Gauss-Jordan, các phép chia và trừ liên tục dẫn đến sai số tích lũy, khiến các phần tử lẽ ra bằng 0 lại mang một giá trị cực nhỏ, yêu cầu xác định ngưỡng ϵ phù hợp.
+- Cài đặt logic tìm cơ sở không gian nghiệm (Null Space): Việc truy hồi từ ma trận RREF để xác định các biến tự do và biểu diễn các biến phụ thuộc theo biến tự do dưới dạng vector đòi hỏi tư duy thuật toán phức tạp hơn so với các không gian còn lại.
+
+### Tài liệu tham khảo
+- [1] G. Strang, Introduction to Linear Algebra, 5th ed. Wellesley, MA: Wellesley-Cambridge Press, 2016.
+- [2] H. Anton và C. Rorres, Elementary Linear Algebra: Applications Version, 11th ed. Hoboken, NJ: Wiley, 2013.
+- [3] D. C. Lay, S. R. Lay, và J. J. McDonald, Linear Algebra and Its Applications, 5th ed. Boston, MA: Pearson, 2015.
