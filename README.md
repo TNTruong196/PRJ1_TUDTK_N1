@@ -177,28 +177,29 @@ cd part2
 cat guide_run_manim_scene1.md
 ```
 
-**Render video từ scene Manim:**
+**Render video từ script Manim:**
 
-Render với chất lượng cao (HD):
+File `part2/manim_scene.py` đã tích hợp sẵn bộ scene và cơ chế ghép video khi render toàn bộ. Chạy theo cú pháp:
+
 ```bash
-cd part2
-manim -pql manim_scene.py <TenClass>
+python part2/manim_scene.py --scene Scene0_Overview --quality m
+python part2/manim_scene.py --scene Scene1_Cholesky_IntroAndSPD --quality m
+python part2/manim_scene.py --scene Scene2_Cholesky_Calculation --quality m
+python part2/manim_scene.py --scene Scene3_Diagonalization --quality m
 ```
 
-Render với chất lượng thấp để test nhanh:
+Render toàn bộ và tự ghép thành `Full_Presentation.mp4`:
 ```bash
-manim -pql manim_scene.py <TenClass>
+python part2/manim_scene.py --scene all --quality m
 ```
 
-**Ví dụ cụ thể:**
-```bash
-manim -pql manim_scene.py GaussianEliminationScene
-```
+Các mức chất lượng phổ biến:
+- `l` : thấp, phù hợp debug nhanh
+- `m` : trung bình, phù hợp khi xem lại nội dung
+- `h` : cao
+- `k` : rất cao
 
-Các tùy chọn phổ biến:
-- `-p` : Chạy và xem video sau khi render
-- `-q` : Chất lượng (l=low, m=medium, h=high, p=production)
-- `-n <số>` : Chỉ render frame từ số thứ n
+Video đầu ra được lưu trong `part2/media/videos/manim_scene/<profile>/`.
 
 ---
 
@@ -290,8 +291,6 @@ PRJ1_TUDTK_N1/
 
 - **NumPy Documentation:** https://numpy.org/
 - **Manim Documentation:** https://docs.manim.community/
-- **SciPy Documentation:** https://docs.scipy.org/
-- **SymPy Documentation:** https://docs.sympy.org/
 
 ---
 
