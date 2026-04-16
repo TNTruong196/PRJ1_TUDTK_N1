@@ -1,0 +1,16 @@
+========== BENCHMARK TÍNH ỔN ĐỊNH SỐ ==========
+Muc tieu: So sanh do chinh xac tren ma tran Tot (SPD) va ma tran Xau (Hilbert).
+Kich thuoc thu nghiem: n = 10. So lan chay: 5
+Sai so tuong doi: ||A x_hat - b||_2 / ||b||_2
+
+[========== Ma tran: SPD (Well-conditioned) ==========]
+ - Khử Gauss                :   0.0001s | Sai so: 9.45e-17 | Thanh cong: 5/5
+ - Phân rã Cholesky         :   0.0001s | Sai so: 7.72e-17 | Thanh cong: 5/5
+ - Hệ PT Chuẩn (Cholesky)   :   0.0001s | Sai so: 3.70e-16 | Thanh cong: 5/5
+ - Lặp Gauss-Seidel         :   0.0002s | Sai so: 1.03e-09 | Thanh cong: 5/5
+
+[========== Ma tran: Hilbert (Ill-conditioned) ==========]
+ - Khử Gauss                : THAT BAI (0/5). Vi du loi: he khong co nghiem duy nhat
+ - Phân rã Cholesky         :   0.0001s | Sai so: 8.50e-17 | Thanh cong: 5/5
+ - Hệ PT Chuẩn (Cholesky)   : THAT BAI (0/5). Vi du loi: Matrix is not positive definite.
+ - Lặp Gauss-Seidel         :   0.0025s | Sai so: 8.35e-06 | Thanh cong: 5/5
