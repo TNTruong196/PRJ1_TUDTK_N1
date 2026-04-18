@@ -184,7 +184,7 @@ KHOA CÔNG NGHỆ THÔNG TIN
 
 \begin{center}
 \begin{tabular}{rll}
-\hspace{1.8cm} & \textbf{Sinh viên thực hiện:} & Trần Nhật Trường - 24120486 (\textbf{Nhóm trưởng}) \\
+\hspace{1.8cm} & \textbf{Sinh viên thực hiện:} & Trần Nhật Trường - 24120486  \\
                                       &                    & Nguyễn Thanh Nhật - 24120111 \\
                                       &                    & Nguyễn Ngọc Phúc - 24120215 \\
                                       &                    & Trần Lê Đức Việt - 24120245 \\
@@ -216,7 +216,7 @@ KHOA CÔNG NGHỆ THÔNG TIN
 \newpage
 
 \renewcommand{\arraystretch}{1.3} % Adjust row height
-\pagenumbering{arabic}
+\pagenumbering{arabic}  
 
 % --- PHẦN NỘI DUNG TỪ sample.tex ---
 
@@ -257,16 +257,18 @@ Chúng em cam đoan rằng tất cả các thành viên trong nhóm đều đã 
 \textbf{Tên} & \textbf{Nội dung} & \textbf{Phần trăm đánh giá} \\ \hline
 \endhead
 Trần Nhật Trường & \begin{itemize}[leftmargin=*, noitemsep, topsep=0pt, partopsep=0pt]
+                        \item Phân chia công việc
                         \item Làm toàn bộ chéo hóa ma trận 
                         \item Thiết kế cấu trúc và nội dung cơ bản Manim 
-                        \item Cài đặt hàm giải phương trình bằng phân rã Cholesky 
+                        \item Cài đặt hàm giải phương trình $Ax = b$ bằng phương pháp bình phương tối thiểu 
+                        \item Cài đặt hàm giải phương trình $Ax = b$ bằng phương pháp phân rã Cholesky
                         \item Kiểm thử và tối ưu hóa mã nguồn
                     \end{itemize} & 100\% \\ \hline
 Nguyễn Thanh Nhật   & \begin{itemize}[leftmargin=*, noitemsep, topsep=0pt, partopsep=0pt]
                         \item Cài đặt \texttt{inverse(A)} 
                         \item Cài đặt \texttt{rank\_and\_basis(A)} 
                         \item Cài đặt \texttt{verify\_solution(A, x, b)} 
-                        \item Kiểm thử part 1
+                        \item Kiểm thử phần 1
                         \item Cài đặt hàm giải hệ phương trình bằng khử Gauss
                         \item Cài đặt hàm sinh ma trận SPD
                         \item Cài đặt hàm sinh ma trận Hilbert
@@ -274,14 +276,18 @@ Nguyễn Thanh Nhật   & \begin{itemize}[leftmargin=*, noitemsep, topsep=0pt, p
 
                     \end{itemize} & 100\% \\ \hline
 Nguyễn Ngọc Phúc     & \begin{itemize}[leftmargin=*, noitemsep, topsep=0pt, partopsep=0pt]
+                        \item Thiết kế kịch bản video Manim
                         \item Thực hiện phân rã ma trận bằng Cholesky
+                        \item Thiết kế \texttt{solvers.py}.
                         \item Lập trình các video trực quan hóa
                         \item Hoàn thiện đầy đủ video Manim
+                        \item Kiểm thử và tối ưu hóa mã nguồn
                     \end{itemize} & 100\% \\ \hline
 Trần Lê Đức Việt   & \begin{itemize}[leftmargin=*, noitemsep, topsep=0pt, partopsep=0pt]
                         \item Cài đặt \texttt{gaussian\_eliminate(A, b)}
                         \item Cài đặt \texttt{back\_substitution(U, c)}
                         \item Cài đặt \texttt{determinant(A)}
+                        \item Cài đặt \texttt{inverse(A)} -- Gauss--Jordan
                         \item Cài đặt phương pháp Gauss-Seidel để giải hệ phương trình $Ax = b$
                         \item Tổng hợp và hoàn thiện file \texttt{benchmark.py} 
                     \end{itemize} & 100\% \\ \hline
@@ -292,7 +298,6 @@ Trần Nguyên Tân   & \begin{itemize}[leftmargin=*, noitemsep, topsep=0pt, par
                         \item Tổng hợp và hoàn thiện \texttt{report.tex}
                         \item Xây dụng \texttt{README.md}
                         \item Viết các thông tin kỹ thuật \texttt{requirements.txt}
-                        \item Kiểm thử và tối ưu hóa mã nguồn
                     \end{itemize} & 100\% \\ \hline
 \caption{Bảng đánh giá chi tiết}\\
 \end{longtable}
@@ -333,15 +338,16 @@ Từ ba phần trên, báo cáo nhấn mạnh hai kết quả chính: các thu�
 
 \section{Phần 1: Phép khử Gauss và Các Ứng Dụng}
 
-\subsection{Mục tiêu và phạm vi triển khai Part 1}
+\subsection{Mục tiêu và phạm vi triển khai Phần 1}
 
 Phần 1 là nền tảng của toàn bộ đồ án, tập trung vào các bài toán đại số tuyến tính cơ bản: giải hệ tuyến tính, tính định thức, tìm nghịch đảo, tính hạng và cơ sở các không gian con. Nội dung này được nhóm cài đặt thuần Python với \texttt{list}, không dùng các hàm giải có sẵn như \texttt{numpy.linalg.solve}, \texttt{numpy.linalg.inv}, \texttt{scipy.linalg.*} hoặc \texttt{sympy} ở phần lõi.
-
-Theo phân công, phần công việc của thành viên Nguyễn Thanh Nhật tập trung vào:
 \begin{itemize}
     \item Cài đặt \texttt{inverse(A)} theo Gauss--Jordan.
+    \item Cài đặt \texttt{determinant(A)} theo kết quả khử Gauss.
+    \item Cài đặt \texttt{gaussian\_eliminate(A, b)} để giải hệ \(Ax=b\) và phân loại trạng thái nghiệm.
+    \item Cài đặt \texttt{back\_substitution(U, c)} để giải hệ tam giác trên sau khi khử Gauss.
     \item Cài đặt \texttt{rank\_and\_basis(A)} để trả hạng và cơ sở của không gian cột, dòng, nghiệm.
-    \item Cài đặt/hoàn thiện \texttt{verify\_solution(A, x, b)} trong notebook demo và xây dựng kịch bản test cho Part 1.
+    \item Cài đặt/hoàn thiện \texttt{verify\_solution(A, x, b)} trong notebook demo và xây dựng kịch bản test.
 \end{itemize}
 
 \subsection{Cài đặt chi tiết các hàm}
@@ -446,7 +452,7 @@ Theo phân công, phần công việc của thành viên Nguyễn Thanh Nhật t
     \item \texttt{None} nếu ma trận suy biến.
 \end{itemize}
 
-\textbf{Ý tưởng theo file báo cáo thành viên:} tạo ma trận bổ sung \([A|I]\), dùng phép biến đổi sơ cấp để đưa nửa trái về \(I\). Khi đó nửa phải chính là \(A^{-1}\).
+\textbf{Ý tưởng:} tạo ma trận bổ sung \([A|I]\), dùng phép biến đổi sơ cấp để đưa nửa trái về \(I\). Khi đó nửa phải chính là \(A^{-1}\).
 
 \textbf{Các bước chi tiết:}
 \begin{enumerate}
@@ -480,7 +486,7 @@ Theo phân công, phần công việc của thành viên Nguyễn Thanh Nhật t
     \item Cơ sở không gian nghiệm \(\mathcal{N}(A)\).
 \end{itemize}
 
-\textbf{Ý tưởng theo file báo cáo thành viên:} khử ma trận về REF/RREF, dùng vị trí cột pivot để suy ra rank và các tập cơ sở.
+\textbf{Ý tưởng:} khử ma trận về REF/RREF, dùng vị trí cột pivot để suy ra rank và các tập cơ sở.
 
 \textbf{Các bước chi tiết:}
 \begin{enumerate}
@@ -543,9 +549,9 @@ Sai số dấu phẩy động tích lũy & Phần tử đáng lẽ bằng 0 như
 \label{tab:part1_edge_cases}
 \end{table}
 
-\subsection{Quy trình demo và kiểm thử Part 1}
+\subsection{Quy trình demo và kiểm thử}
 
-Trong \texttt{part1/part1\_demo.ipynb}, nhóm thiết kế quy trình kiểm thử theo đúng nội dung file báo cáo thành viên:
+Trong \texttt{part1/part1\_demo.ipynb}, nhóm thiết kế quy trình kiểm thử theo nội dung:
 \begin{enumerate}
     \item Tạo các bộ dữ liệu riêng cho ba tình huống: nghiệm duy nhất, vô nghiệm, vô số nghiệm.
     \item Gọi \texttt{gaussian\_eliminate(A, b)} để lấy nghiệm hoặc trạng thái hệ.
@@ -625,7 +631,7 @@ Kiểm chứng với NumPy/SciPy & 0.5 & Đạt: thư viện dùng ở bước v
 \label{tab:part1_rubric}
 \end{table}
 
-Tổng kết, Part 1 đã đáp ứng đầy đủ yêu cầu bắt buộc: cài đặt thuật toán từ đầu, xử lý tình huống biên, có demo kiểm thử và có kiểm chứng định lượng.
+Tổng kết, Phần 1 đã đáp ứng đầy đủ yêu cầu bắt buộc: cài đặt thuật toán từ đầu, xử lý tình huống biên, có demo kiểm thử và có kiểm chứng định lượng.
 
 \section{Phần 2: Phân Rã Ma Trận và Trực Quan Hóa với Manim}
 
@@ -644,7 +650,7 @@ Phần 2 yêu cầu sinh viên chọn một kỹ thuật phân rã ma trận (QR
 
 \subsection{Mục tiêu cài đặt và kiểm thử}
 
-Phần cài đặt của Part 2 được trình bày theo cùng một khuôn chuẩn với Phần 1 để đảm bảo tính nhất quán trong báo cáo:
+Phần cài đặt của Phần 2 được trình bày theo cấu trúc:
 \begin{itemize}
     \item \textbf{Mục tiêu:} nêu rõ bài toán mà từng hàm cần giải quyết.
     \item \textbf{Lý thuyết và công thức:} mô tả điều kiện áp dụng và công thức tính chính.
@@ -737,8 +743,14 @@ Quy trình \texttt{diagonalize\_matrix(A)} được triển khai theo các bư�
     \item \textbf{Xác minh kết quả:} gọi \texttt{verify\_diagonalization(A, P, D, P\_inv)} để kiểm tra $PDP^{-1} \approx A$ trước khi kết luận.
 \end{enumerate}
 
+\subsubsection{Lý do chọn cách triển khai chéo hóa hiện tại}
 
-Nhờ cách tách vai trò như trên, báo cáo vẫn nêu được đầy đủ các hàm cài đặt mà không phải dùng bảng dài, đồng thời giữ nhịp trình bày nhất quán với các mục Mục tiêu -- Thuật toán -- Kiểm thử.
+Để bám sát mục tiêu ``hiểu bản chất thuật toán'' nhưng vẫn đảm bảo độ tin cậy số học khi kích thước ma trận tăng, nhóm chọn thiết kế kết hợp giữa cài đặt thủ công và thư viện chuẩn:
+\begin{enumerate}
+    \item \textbf{Giá trị giáo khoa:} tự cài đặt Faddeev--LeVerrier và Durand--Kerner giúp làm rõ cách từ ma trận $A$ đi tới đa thức đặc trưng và nghiệm của đa thức.
+    \item \textbf{Cân bằng tính đúng và hiệu năng:} với ma trận nhỏ, nhánh tự cài đặt đủ minh họa thuật toán; với ma trận lớn hơn, nhánh NumPy giúp giảm rủi ro mất ổn định số.
+    \item \textbf{Kiểm soát ổn định bằng số điều kiện:} kiểm tra \(\kappa(P)\) trước khi trả kết quả để tránh nhận nghiệm chéo hóa kém tin cậy khi $P$ gần suy biến.
+\end{enumerate}
 
 \subsection{Phân Rã Cholesky}
 
@@ -768,6 +780,51 @@ Phân tử $L_{ij}$ được tính theo công thức truy hồi:
 \end{align}
 
 \textbf{Độ phức tạp tính toán:} $\approx \frac{1}{3}n^3$ phép tính (phép toán dấu phẩy động), chỉ bằng khoảng 50\% chi phí của phân rã LU thông thường.
+
+\subsubsection{Ví dụ số chi tiết dùng trong video Manim}
+
+Để tăng tính trực quan, nhóm sử dụng ma trận SPD cỡ nhỏ trong video:
+\[
+A=\begin{bmatrix}
+4 & 12 & -16\\
+12 & 37 & -43\\
+-16 & -43 & 98
+\end{bmatrix}.
+\]
+
+\textbf{Kiểm tra Sylvester:}
+\[
+\Delta_1=4>0,\qquad
+\Delta_2=\det\begin{bmatrix}4&12\\12&37\end{bmatrix}=148-144=4>0,
+\]
+\[
+\Delta_3=\det(A)>0.
+\]
+Suy ra $A$ là SPD, đủ điều kiện áp dụng Cholesky.
+
+\textbf{Các bước tính $L$ được trực quan hóa trong Scene 2:}
+\[
+L_{11}=\sqrt{4}=2,\quad L_{21}=\frac{12}{2}=6,\quad L_{31}=\frac{-16}{2}=-8,
+\]
+\[
+L_{22}=\sqrt{37-6^2}=1,\quad L_{32}=\frac{-43-(-8)\cdot6}{1}=5,
+\]
+\[
+L_{33}=\sqrt{98-((-8)^2+5^2)}=3.
+\]
+
+Do đó:
+\[
+L=\begin{bmatrix}
+2 & 0 & 0\\
+6 & 1 & 0\\
+-8 & 5 & 3
+\end{bmatrix},
+\qquad
+A=LL^T.
+\]
+
+Việc công khai trọn bộ phép tính số ngay trong báo cáo giúp người đọc kiểm tra lại độc lập mà không cần mở file kịch bản Manim.
 
 \subsubsection{Mục tiêu, đầu vào và đầu ra}
 
@@ -817,101 +874,172 @@ Trong phạm vi mã nguồn hiện tại, hàm lõi được cài đặt trực 
 
 Mỗi bước có độ phức tạp $O(n^2)$, nên tổng chi phí sau phân rã chỉ $O(n^2)$.
 
+\subsubsection{Diễn giải chi tiết hai bước thế tam giác}
+
+Để làm rõ hơn phần ``giải hệ sau phân rã'', nhóm triển khai theo đúng thứ tự toán học chuẩn:
+
+\textbf{Bước 1 -- Thế tiến (Forward Substitution):}
+\[
+L y = b,
+\quad
+y_i = \frac{1}{L_{ii}}\left(b_i - \sum_{j=1}^{i-1}L_{ij}y_j\right),\; i=1,\ldots,n.
+\]
+
+\textbf{Bước 2 -- Thế lùi (Backward Substitution):}
+\[
+L^T x = y,
+\quad
+x_i = \frac{1}{L_{ii}}\left(y_i - \sum_{j=i+1}^{n}L_{ji}x_j\right),\; i=n,\ldots,1.
+\]
+
+Hai hệ tam giác này đều có chi phí $O(n^2)$, nên sau khi đã trả chi phí phân rã $O(n^3)$ ban đầu, mỗi lần giải với vế phải mới chỉ cần chi phí bậc hai.
+
+\subsubsection{Mở rộng cho bài toán bình phương tối thiểu}
+
+Với ma trận chữ nhật $A\in\mathbb{R}^{m\times n}$ ($m\ge n$), nhóm dùng phương trình chuẩn:
+\[
+A^TAx = A^Tb.
+\]
+Đặt $M=A^TA$, $c=A^Tb$, khi đó:
+\begin{enumerate}
+    \item $M$ là ma trận vuông đối xứng; trong trường hợp cột của $A$ độc lập tuyến tính thì $M$ xác định dương.
+    \item Áp dụng \texttt{cholesky\_custom(M)} để nhận $M=LL^T$.
+    \item Giải liên tiếp $Ly=c$ và $L^Tx=y$ bằng hai bước thế ở trên.
+\end{enumerate}
+
+Điểm quan trọng của cách trình bày này là nối liền được ba lớp: lý thuyết đại số tuyến tính, thuật toán số, và ứng dụng trong hồi quy/ước lượng dữ liệu thực tế.
+
 \subsection{Trực Quan Hóa với Manim}
 
-Nhóm sử dụng thư viện Manim Community v0.18 để tạo video demo (MP4, độ phân giải 720p). Video được chia thành 4 scene chính:
+Nhóm sử dụng Manim Community (v0.20.1) để xây dựng video minh họa toàn bộ luồng suy luận của Phần 2. Thay vì chỉ trình diễn kết quả cuối, video được thiết kế theo hướng ``giải thích thuật toán bằng dữ liệu chuyển động'': người xem thấy rõ dữ liệu nào được lấy từ ma trận gốc, dữ liệu nào đã được tính ở bước trước, và chúng hội tụ như thế nào vào kết quả cuối cùng.
 
-\subsubsection{Scene 0: Giới thiệu bài toán (Cover \& Roadmap)}
+\subsubsection{Mục tiêu sư phạm và cấu trúc storyboard}
 
-\textbf{Nội dung:}
-\begin{itemize}
-    \item Hiển thị tiêu đề: \textit{``Phân rã Cholesky \& Chéo hóa Ma Trận''}
-    \item Công thức tổng quát: $A = LL^T$ và $A = PDP^{-1}$
-    \item Ma trận ví dụ $A$ cụ thể (kích thước $3 \times 3$, đối xứng xác định dương)
-    \item Bản đồ định hướng (You are here) cho toàn video
-\end{itemize}
-
-\textbf{Kỹ thuật Manim:}
-\begin{itemize}
-    \item Dùng \texttt{VGroup} để gom nhóm các phần tử, \texttt{RoundedRectangle} để khung công thức.
-    \item Hiệu ứng viết (Write) khi hiển thị công thức.
-    \item Dùng \texttt{Arrow} để nối kết công thức với ma trận.
-\end{itemize}
-
-\subsubsection{Scene 1: Kiểm tra tính chất SPD}
-
-\textbf{Nội dung:}
+Kịch bản video được thiết kế theo 4 lớp nhận thức liên tiếp:
 \begin{enumerate}
-    \item \textbf{Tính đối xứng:} Lật ma trận qua đường chéo chính, nhận xét $A = A^T$.
-    \item \textbf{Tính xác định dương (Tiêu chuẩn Sylvester):}
-    \begin{itemize}
-        \item $\Delta_1 = A_{11} > 0$: Highlight ô $(1,1)$, hiện giá trị.
-        \item $\Delta_2 = \det(A_{1:2, 1:2}) > 0$: Highlight ma trận con $2 \times 2$ ở góc trái, tính định thức.
-        \item $\Delta_3 = \det(A) > 0$: Toàn bộ ma trận $A$, tính định thức.
-    \end{itemize}
-    \item Kết luận: $A$ là SPD $\implies$ có thể phân rã Cholesky.
+    \item \textbf{Khởi động (Hook \& Anchor):} nêu ma trận $A$ cùng hai đích đến $A=LL^T$ và $A=PDP^{-1}$ để người học có ``bản đồ'' trước khi vào chi tiết.
+    \item \textbf{Kiểm duyệt điều kiện (Validation):} kiểm tra đối xứng và Sylvester trước khi tính Cholesky, nhấn mạnh tư duy kiểm tra dữ liệu đầu vào.
+    \item \textbf{Thực thi (Execution):} triển khai từng công thức với con số cụ thể, tập trung vào dòng chảy dữ liệu giữa $A$, các biểu thức trung gian và ma trận kết quả.
+    \item \textbf{Hội tụ và xác minh (Resolution):} so sánh kết quả thủ công với NumPy để tạo vòng lặp tự kiểm chứng.
 \end{enumerate}
 
-\textbf{Kỹ thuật:}
-\begin{itemize}
-    \item Dùng \texttt{highlight\_cell} để vẽ viền quanh các ô cần highlight.
-    \item Animation giá trị từng bước.
-    \item Hiệu ứng màu sắc để phân biệt các bước.
-\end{itemize}
+Nhịp độ trình bày được điều chỉnh theo ``nhịp hình sin'': phần lý thuyết quét nhanh, phần tính toán lõi làm chậm để tăng thời gian xử lý nhận thức của người xem.
 
-\subsubsection{Scene 2: Tính Cholesky từng bước}
+\subsubsection{Kiến trúc mã nguồn cho scene Manim}
 
-\textbf{Nội dung chính (7--8 phút):}
-\begin{enumerate}
-    \item \textbf{Chuẩn bị:} Thu nhỏ ma trận $A$ sang góc, hiển thị công thức lặp, tạo khung ma trận $L$ trống.
-    \item \textbf{Tính từng phần tử của $L$:}
-    \begin{itemize}
-        \item \textbf{Cột 1:} $L_{11} = \sqrt{A_{11}}$, $L_{21} = A_{21}/L_{11}$, $L_{31} = A_{31}/L_{11}$.
-        \item \textbf{Cột 2:} $L_{22} = \sqrt{A_{22} - L_{21}^2}$, $L_{32} = (A_{32} - L_{31}L_{21})/L_{22}$.
-        \item \textbf{Cột 3:} $L_{33} = \sqrt{A_{33} - (L_{31}^2 + L_{32}^2)}$.
-    \end{itemize}
-    \item \textbf{Xác minh:} Hiển thị $L \times L^T = A$ bằng animation nhân ma trận.
-\end{enumerate}
+\textbf{Thiết kế hướng đối tượng.} File \texttt{part2/manim\_scene.py} tổ chức các scene dựa trên một lớp nền (\texttt{BaseMathScene}) đóng vai trò ``single source of truth''. Tất cả dữ liệu tĩnh như ma trận $A$, phân rã Cholesky, trị riêng và các ma trận $P,D,P^{-1}$ đều được chuẩn bị tập trung để tránh lệch dữ liệu giữa các scene.
 
-\textbf{Kỹ thuật Manim nâng cao:}
-\begin{itemize}
-    \item \textbf{Số bay (Flying Numbers):} Tạo số từ công thức, dùng \texttt{animate.move\_to()} để di chuyển vào ô ma trận, sử dụng \texttt{target\_entry.become()} để ghi đè liền mạch.
-    \item \textbf{Đan chéo highlight:} Dùng hai màu phân biệt (ví dụ: Cam cho $A$, Tím cho $L$) để theo dõi từ đâu dữ liệu lấy ra.
-    \item \textbf{Dọn dẹp từng bước:} Xóa (FadeOut) các công thức cũ khi hết gen giá trị, giữ màn hình tối giản.
-\end{itemize}
-
-\subsubsection{Scene 3: Chéo hóa ma trận}
-
-\textbf{Nội dung:}
-\begin{enumerate}
-    \item \textbf{Tìm giá trị riêng:} Phương trình đặc trưng $\det(A - \lambda I) = 0$, hiển thị nghiệm $\lambda_1, \lambda_2, \lambda_3$.
-    \item \textbf{Tìm vector riêng:} Giải $(A - \lambda_i I)v_i = 0$ cho từng $\lambda_i$, hiển thị các vector $v_1, v_2, v_3$.
-    \item \textbf{Xây dựng ma trận $P, D, P^{-1}$:}
-    \begin{itemize}
-        \item Ma trận $P = [v_1 \mid v_2 \mid v_3]$ từ các vector riêng.
-        \item Ma trận $D = \text{diag}(\lambda_1, \lambda_2, \lambda_3)$.
-        \item Ma trận $P^{-1}$ (tính từ $P$ bằng hàm từ Part 1).
-    \end{itemize}
-    \item \textbf{Xác minh:} Hiển thị $PDP^{-1} = A$ bằng animation nhân ma trận.
-\end{enumerate}
-
-\textbf{Kỹ thuật:}
-\begin{itemize}
-    \item Dùng \texttt{next\_to()} để ghim mủi tên Gauss dính chặt vào ma trận vector, loại bỏ lỗi đè hình.
-    \item Tham số \texttt{h\_buff=2.5} trong class \texttt{Matrix} để tránh lỗi tràn viền của số thập phân dài.
-\end{itemize}
-
-\subsubsection{Quản lý thời gian tập trung (Pacing)}
-
-Các hằng số thời gian được định nghĩa ở cấp độ class:
+\textbf{Quản trị thời gian tập trung.} Các hằng số thời gian được đặt ở cấp độ class để điều chỉnh đồng bộ toàn bộ animation:
 \begin{lstlisting}[language=Python, basicstyle=\ttfamily\small, commentstyle=\itshape\color{gray}, breaklines=true]
-TIME_FAST = 1.0      # Fast animation
-TIME_NORMAL = 1.5    # Normal animation
-WAIT_SHORT = 1.0     # Short wait
-WAIT_LONG = 4.0      # Long wait (for matrix multiplication)
+TIME_FAST = 1.0
+TIME_NORMAL = 1.5
+WAIT_SHORT = 1.0
+WAIT_LONG = 4.0
 \end{lstlisting}
 
-Điều này cho phép tinh chỉnh tốc độ toàn video từ một khoảnh khắc để phục vụ các mục tiêu khác nhau (review nhanh hoặc giảng dạy chi tiết).
+\textbf{Thành phần giao diện tái sử dụng.} Các hàm như \texttt{make\_labeled\_matrix}, \texttt{highlight\_cell}, \texttt{show\_transition\_roadmap} được đóng gói để đảm bảo đồng nhất thị giác giữa các cảnh (font, khoảng cách, màu nhấn, cách đánh dấu ô).
+
+\subsubsection{Phân rã kỹ thuật theo từng scene}
+
+\textbf{Scene 0 -- Overview \& Roadmap.}
+\begin{itemize}
+    \item Trình bày ma trận $A$ và hai nhánh thuật toán: Cholesky và chéo hóa.
+    \item Dùng \texttt{RoundedRectangle}, \texttt{VGroup}, \texttt{Arrow} để tạo sơ đồ không gian thay vì trình bày tuyến tính bằng chữ.
+    \item Giá trị sư phạm: giúp người học định vị ``đang ở đâu trong hành trình'' ngay từ đầu.
+\end{itemize}
+
+\textbf{Scene 1 -- Kiểm tra SPD bằng Sylvester.}
+\begin{itemize}
+    \item Kiểm tra đối xứng $A=A^T$ và ba định thức con chính $\Delta_1,\Delta_2,\Delta_3$.
+    \item Công thức dài của $\Delta_3$ được tách thành nhiều dòng \texttt{MathTex} và sắp xếp bằng \texttt{VGroup(...).arrange(DOWN)} để tránh tràn viền.
+    \item Dùng highlight theo ô/khối ma trận để ánh xạ trực tiếp giữa biểu thức định thức và vị trí phần tử trên ma trận.
+\end{itemize}
+
+\textbf{Scene 2 -- Cholesky step-by-step (trọng tâm).}
+\begin{itemize}
+    \item Duy trì công thức tổng quát trong khi điền dần các phần tử của $L$: cột 1, cột 2, cột 3.
+    \item Áp dụng kỹ thuật \textbf{flying numbers}: số được sinh tại công thức, di chuyển bằng \texttt{animate.move\_to()}, sau đó ghi đè ô đích bằng \texttt{become()} để không để lại ``ghosting''.
+    \item Áp dụng \textbf{đan chéo highlight}: màu Cam đánh dấu dữ liệu lấy từ $A$, màu Tím đánh dấu dữ liệu lấy từ các giá trị $L$ đã tính, giúp người xem truy vết nguồn dữ liệu.
+    \item Kết thúc bằng bước xác minh trực tiếp $LL^T\approx A$ và biểu đồ chi phí tính toán LU so với Cholesky (nêu rõ lợi ích $\approx 50\%$ FLOPs).
+\end{itemize}
+
+\textbf{Scene 3 -- Chéo hóa ma trận.}
+\begin{itemize}
+    \item Trình bày tuần tự: tìm trị riêng, giải không gian riêng, dựng $P,D,P^{-1}$, rồi xác minh $PDP^{-1}\approx A$.
+    \item Khắc phục lỗi dàn trang số thực dài bằng \texttt{h\_buff} lớn hơn trong \texttt{Matrix}.
+    \item Ghim mũi tên thao tác Gauss bằng \texttt{next\_to(..., LEFT)} để tránh đè hình khi nội dung thay đổi.
+    \item Dọn màn hình theo từng lớp bằng \texttt{FadeOut} để giảm tải nhận thức ở cuối cảnh.
+\end{itemize}
+
+\subsubsection{Kỹ thuật trực quan hóa cốt lõi và giá trị học tập}
+
+\begin{table}[H]
+\centering
+\small
+\begin{tabular}{|p{0.28\textwidth}|p{0.30\textwidth}|p{0.32\textwidth}|}
+\hline
+\textbf{Kỹ thuật} & \textbf{Cách triển khai} & \textbf{Tác động học tập} \\\hline
+Roadmap chuyển cảnh & Gọi \texttt{show\_transition\_roadmap} trước mỗi scene & Giảm mất phương hướng, giữ mạch theo dõi. \\\hline
+Highlight theo nguồn dữ liệu & Màu khác nhau cho ô thuộc $A$ và ô thuộc $L$ & Trả lời trực tiếp câu hỏi ``số này từ đâu ra''. \\\hline
+Flying numbers & \texttt{MathTex} + \texttt{move\_to} + \texttt{become} & Biến phép toán tĩnh thành dòng chảy dữ liệu quan sát được. \\\hline
+Đối chiếu manual vs NumPy & Đặt song song kết quả tự tính và thư viện & Tăng độ tin cậy, rèn tư duy kiểm chứng. \\\hline
+\end{tabular}
+\caption{Kỹ thuật trực quan hóa chính trong video Manim Part 2}
+\label{tab:manim_visual_techniques}
+\end{table}
+
+\subsubsection{Pipeline render và tự động hóa xuất video}
+
+Khối chạy chính trong \texttt{part2/manim\_scene.py} tích hợp cơ chế tự động hóa để phục vụ cả gỡ lỗi lẫn xuất bản:
+\begin{itemize}
+    \item \textbf{Argparse theo scene:} cho phép render nhanh từng cảnh (ví dụ scene 3) mà không phải chạy toàn bộ video.
+    \item \textbf{Điều khiển chất lượng:} tham số hóa mức chất lượng render để cân bằng giữa thời gian và độ nét.
+    \item \textbf{Ghép cảnh tự động bằng FFmpeg:} khi chọn render toàn bộ, script sinh danh sách video cảnh và gọi FFmpeg để concat thành một file MP4 hoàn chỉnh.
+\end{itemize}
+
+Thiết kế này giúp rút ngắn vòng lặp ``sửa code -- xem kết quả'' trong quá trình làm kịch bản, đồng thời giảm thao tác thủ công ở giai đoạn hậu kỳ.
+
+\subsubsection{Kết luận}
+
+Phần Manim của đồ án không chỉ đạt tiêu chí ``có video minh họa'', mà còn đạt ba mục tiêu kỹ thuật quan trọng:
+\begin{enumerate}
+    \item \textbf{Đúng toán học:} mọi kết quả được kiểm chứng chéo bằng NumPy.
+    \item \textbf{Rõ luồng dữ liệu:} mỗi giá trị trong ma trận kết quả đều có nguồn gốc trực quan.
+    \item \textbf{Dễ bảo trì và mở rộng:} scene tách lớp, timing tập trung, và pipeline render tự động.
+\end{enumerate}
+
+\subsubsection{Mức độ tương tác lý thuyết trong video Manim}
+
+Ngoài minh họa công thức, kịch bản được thiết kế để kích hoạt tư duy phản biện của người học theo bốn cơ chế:
+\begin{enumerate}
+    \item \textbf{Constructivist prompt:} mở bằng câu hỏi ``làm thế nào phân tích ma trận $A$'' trước khi đưa lời giải, thay vì giảng một chiều.
+    \item \textbf{Academic suspense:} đặt bài kiểm tra SPD như một ``cửa kiểm duyệt'' bắt buộc trước Cholesky, tạo trạng thái chờ xác nhận hợp lệ.
+    \item \textbf{Value quantification:} dùng biểu đồ chi phí để trả lời trực tiếp câu hỏi ``học thuật toán này để làm gì''.
+    \item \textbf{Verification loop:} duy trì đối chiếu manual và NumPy như một vòng phản biện liên tục, không để người học tiếp nhận thụ động.
+\end{enumerate}
+
+\subsubsection{Đánh giá UX/UI học tập và tác động nhận thức}
+
+Từ góc nhìn trải nghiệm học tập, phần trực quan hóa đạt các điểm mạnh chính:
+\begin{itemize}
+    \item \textbf{Điều hướng cục bộ rõ ràng:} roadmap chuyển cảnh đóng vai trò ``you are here'', giúp người xem không bị lạc khi lượng công thức tăng.
+    \item \textbf{Màn hình sạch theo ngữ cảnh:} xóa có chủ đích các biểu thức cũ bằng \texttt{FadeOut} để giảm nhiễu thị giác.
+    \item \textbf{Độ nhất quán giao diện:} cùng một chuẩn font, tỷ lệ ma trận, khoảng cách và hệ màu cho toàn bộ scene.
+    \item \textbf{Tính minh bạch kết quả:} so sánh song song với thư viện chuẩn ở cuối scene nhằm củng cố độ tin cậy.
+\end{itemize}
+
+Những yếu tố này làm giảm tải nhận thức ngoại lai (extraneous cognitive load), qua đó tăng thời lượng chú ý cho phần bản chất toán học.
+
+\subsubsection{Khó khăn triển khai Manim và hướng khắc phục}
+
+Trong quá trình hiện thực hóa video, nhóm gặp các khó khăn kỹ thuật thực tế:
+\begin{enumerate}
+    \item \textbf{Xung đột bố cục công thức dài:} các biểu thức định thức dễ tràn viền hoặc chồng lấn.
+    \item \textbf{Đồng bộ chuyển động nhiều đối tượng:} scene có nhiều đối tượng động cùng lúc dễ bị lệch nhịp hoặc che khuất.
+    \item \textbf{Thời gian render và vòng lặp debug dài:} thay đổi nhỏ trong animation có thể kéo theo render lại đáng kể.
+\end{enumerate}
+
+Biện pháp nhóm áp dụng gồm: tách công thức lớn thành nhiều \texttt{MathTex} theo dòng, chuẩn hóa timing bằng hằng số class, và dùng pipeline render theo scene để rút ngắn chu trình chỉnh sửa.
 
 \subsection{Bước đánh giá hoàn thành các tiêu chí}
 
@@ -939,16 +1067,16 @@ Tổng kết, Phần 2 đã hoàn thành đầy đủ các tiêu chí theo đề
 
 \section {Phần 3: Giải Hệ Phương Trình và Phân Tích Hiệu Năng}
 
-\subsection{Mục tiêu và phạm vi triển khai Part 3}
+\subsection{Mục tiêu và phạm vi triển khai Phần 3}
 
 Phần 3 tập trung vào hai mục tiêu chính của đề bài: (1) so sánh các phương pháp giải hệ tuyến tính $Ax=b$, và (2) phân tích ổn định số trên các họ ma trận có điều kiện tốt/xấu.
 
 Trong mã nguồn hiện tại, nhóm triển khai bốn hướng giải:
 \begin{itemize}
-    \item \texttt{solve\_via\_gauss}: khử Gauss (kế thừa từ Part 1).
-    \item \texttt{solve\_via\_cholesky}: giải qua phân rã Cholesky (kế thừa từ Part 2).
+    \item \texttt{solve\_via\_gauss}: khử Gauss (kế thừa từ Phần 1).
+    \item \texttt{solve\_via\_cholesky}: giải qua phân rã Cholesky (kế thừa từ Phần 2).
     \item \texttt{solve\_via\_normal\_equations}: hệ phương trình chuẩn cho bài toán chữ nhật/least-squares.
-    \item \texttt{solve\_gauss\_seidel}: phương pháp lặp Gauss--Seidel (cài đặt mới của Part 3).
+    \item \texttt{solve\_gauss\_seidel}: phương pháp lặp Gauss--Seidel (cài đặt mới của Phần 3).
 \end{itemize}
 
 Phần benchmark được tổ chức trong \texttt{part3/benchmark.py}, bao gồm benchmark ngẫu nhiên theo kích thước đề bài và benchmark ổn định số (SPD vs Hilbert).
@@ -969,6 +1097,12 @@ Với phân rã $A=D+L+U$, công thức cập nhật từng thành phần:
 $$x_i^{(k+1)}=\frac{1}{a_{ii}}\left(b_i-\sum_{j=1}^{i-1}a_{ij}x_j^{(k+1)}-\sum_{j=i+1}^{n}a_{ij}x_j^{(k)}\right).$$
 
 Trong cài đặt, nhóm kiểm tra điều kiện đường chéo và cảnh báo khi ma trận không chéo trội chặt (hội tụ không được đảm bảo).
+
+Ở lớp hiện thực, \texttt{solve\_gauss\_seidel} được viết thuần Python để giữ rõ bản chất vòng lặp thuật toán; điều kiện dừng mặc định dùng chuẩn vô cùng:
+\[
+\|x^{(k+1)}-x^{(k)}\|_\infty < 10^{-10}.
+\]
+Tham số \texttt{max\_iterations} được dùng như cơ chế an toàn khi gặp hệ xấu hoặc hội tụ quá chậm.
 
 \subsection{Cài đặt các hàm chính}
 
@@ -1033,7 +1167,7 @@ Kết quả được đo trên cả thời gian và sai số tương đối đ�
 
 \subsection{Kết quả kiểm thử và bằng chứng thực thi}
 
-\subsubsection{Kết quả unit test của Part 3}
+\subsubsection{Kết quả unit test của Phần 3}
 
 Nhóm chạy trực tiếp bộ test trong \texttt{part3/solvers.py}; kết quả:
 
@@ -1045,13 +1179,20 @@ Ran 15 tests in 0.268s
 OK
 \end{verbatim}
 
-Điều này cho thấy các hàm giải chính và các trường hợp lỗi/biên trong Part 3 đều vượt qua kiểm thử tự động.
+Điều này cho thấy các hàm giải chính và các trường hợp lỗi/biên trong Phần 3 đều vượt qua kiểm thử tự động.
 
 \subsubsection{Mẫu kết quả benchmark ổn định số (SPD vs Hilbert)}
 
 Chi tiết số liệu benchmark được chuyển về \textbf{Phụ lục} để phần nội dung chính gọn hơn. Tại đây, nhóm chỉ tóm tắt kết luận: với ma trận SPD, cả 4 phương pháp đều chạy ổn định; với Hilbert, sai số và khả năng thất bại phụ thuộc mạnh vào điều kiện số và điều kiện áp dụng của từng thuật toán.
 
-\subsection{Đánh giá hoàn thành các tiêu chí Part 3}
+Đối chiếu thêm từ log benchmark chi tiết cho thấy:
+\begin{itemize}
+    \item Trên SPD, nghiệm Gauss--Seidel tự cài đặt bám sát nghiệm tham chiếu của \texttt{numpy.linalg.solve}, sai khác tuyệt đối cực đại thường ở mức $10^{-14}$ đến $10^{-15}$.
+    \item Về thời gian, cài đặt thuần Python chậm hơn các hàm thư viện do NumPy tận dụng backend C/Fortran đã tối ưu hóa ở tầng thấp.
+    \item Trên Hilbert, số vòng lặp tăng mạnh và sai số dễ bị khuếch đại; kết quả này phản ánh đúng bản chất ill-conditioned, không phải lỗi logic của thuật toán.
+\end{itemize}
+
+\subsection{Đánh giá hoàn thành các tiêu chí Phần 3}
 
 \begin{table}[H]
 \centering
@@ -1069,7 +1210,7 @@ Trình bày Notebook/Visualization & 0.25 & Đạt: có mã benchmark, log đầ
 \label{tab:part3_rubric}
 \end{table}
 
-Tổng kết, Part 3 đã hoàn thiện phần cài đặt phương pháp lặp, benchmark hiệu năng và phân tích ổn định số theo hướng yêu cầu của đề bài.
+Tổng kết, Phần 3 đã hoàn thiện phần cài đặt phương pháp lặp, benchmark hiệu năng và phân tích ổn định số theo hướng yêu cầu của đề bài.
 
 
 
@@ -1114,6 +1255,7 @@ Báo cáo đã tổng hợp đầy đủ quá trình thực hiện đồ án the
     \item Hiểu rõ tầm quan trọng của việc chọn phần tử trục (pivoting) trong việc giảm thiểu sai số làm tròn khi làm việc với số thực trên máy tính.
     \item Nhận thức được sự khác biệt giữa lý thuyết toán học thuần túy và tính toán số học thực tế, đặc biệt là khái niệm "số không" (epsilon) trong lập trình.
     \item Thấy được tác động của số điều kiện thông qua ma trận Hilbert đối với độ chính xác của các thuật toán giải hệ phương trình tuyến tính.
+    \item  
 \end{itemize}
 
 \subsection{Khó khăn gặp phải}
@@ -1141,6 +1283,7 @@ Từ các kết quả và khó khăn trên, nhóm rút ra định hướng cải
 \addcontentsline{toc}{section}{Phụ lục}
 
 \subsection*{Phụ lục A: Bảng số liệu benchmark}
+\addcontentsline{toc}{subsection}{Phụ lục A: Bảng số liệu benchmark}
 
 Sai số tương đối được dùng trong mọi bảng là:
 \[
@@ -1205,6 +1348,8 @@ Hilbert (ill-conditioned) & Lặp Gauss--Seidel & 0.0025 & $8.35\times 10^{-6}$ 
 \end{table}
 
 \subsection*{Phụ lục B: GitHub Repository}
+\addcontentsline{toc}{subsection}{Phụ lục B: GitHub Repository}
+
 Mã nguồn của dự án được lưu trữ tại địa chỉ sau: 
 \url{https://github.com/TNTruong196/PRJ1_TUDTK_N1}
 
