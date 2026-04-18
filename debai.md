@@ -52,6 +52,8 @@ Sinh viên được kỳ vọng không chỉ hiểu lý thuyết mà còn có kh
 * Tuyệt đối không được sử dụng trực tiếp các hàm có sẵn như `numpy.linalg.solve`, `numpy.linalg.inv`, `scipy.linalg.qr`, `scipy.linalg.lu`, `sympy.linsolve`, hay các phương thức có sẵn như `echelon_form`, `rref`, v.v... cho phần cài đặt thuật toán. **Các thư viện này chỉ được dùng để kiểm chứng kết quả.**
 * phần cài đặt thuật toán bắt buộc là tự cài chứ không được dùng thư viện có sẵn.
 ---
+* được dùng np.linalg.eigvals để tìm trị riêng trong part2 trong TH n>5
+* đối với hàm gauss ở part1 với TH vô số nghiệm in ra nghiệm tổng quảt và trả về None
 
 ## 1. Phần 1: Phép khử Gauss và Các Ứng Dụng
 

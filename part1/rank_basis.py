@@ -40,18 +40,7 @@ def rank_and_basis(A):
 
     # Co so khong gian nghiem (he Ax=0 luon co nghiem)
     null_space = []
-    # if x == None:
-    #     # Vo nghiem, khong ton tai co so
-    #     null_space = None
-    # elif isinstance(x, list):
-    #     # Co 1 nghiem, co so rong
-    #     pass
-    # elif isinstance(x, dict) and 'basis' in x:
-    #     # Vo so nghiem
-    #     null_space = x['basis']
 
-    # return rank, col_space, row_space, null_space
-    # Cac bien tu do la cac cot khong chua pivot
     free_cols = [j for j in range(n) if j not in pivot_cols]
     
     for free_var in free_cols:
