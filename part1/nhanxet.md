@@ -3,4 +3,4 @@
     - **part1_demo**: rất nhiều chỗ cần được chỉnh
 
 - Part1 không cần đến matrix_utils, nên đưa sang chỗ khác.
-- 
+- rank_and_basis() cần được cleanup vì có comment code rất nhiều.
