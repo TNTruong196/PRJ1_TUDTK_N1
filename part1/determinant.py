@@ -5,7 +5,7 @@ except ImportError:
 
 def determinant(A):
     """
-    Tính định thức của ma trận vuông A thông qua phép khử Gauss.
+    Tinh dinh thuc cua ma tran vuong A thong qua phep khu Gauss.
     """
     try:
         m = len(A)
@@ -18,16 +18,16 @@ def determinant(A):
     
     U, _, swaps = gaussian_eliminate(A, dummy_b, verbose=False)
     
-    # Kiểm tra nếu sau khi khử có dòng toàn số 0 trên đường chéo -> det = 0
+    # Kiem tra neu sau khi khu co dong toan so 0 tren duong cheo -> det = 0
     eps = 1e-9
     for i in range(n):
         if abs(U[i][i]) <= eps:
             return 0.0
             
-    # Định thức đổi dấu nếu số lần hoán đổi là số lẻ
+    # Dinh thuc doi dau neu so lan hoan doi la so le
     det = 1.0 if swaps % 2 == 0 else -1.0
     
-    # Định thức ma trận tam giác trên bằng tích đường chéo chính
+    # Dinh thuc ma tran tam giac tren bang tich duong cheo chinh
     for i in range(n):
         det *= U[i][i]
         

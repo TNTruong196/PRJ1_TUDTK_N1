@@ -1,11 +1,3 @@
-"""Manim visualization for Cholesky decomposition and diagonalization.
-
-This file follows the project constraints:
-- Core matrix computations are implemented with pure Python list-of-lists.
-- numpy is used only for verification at the end of scenes.
-- The presentation is split into independent scenes for modular rendering.
-"""
-
 from __future__ import annotations
 
 import argparse
@@ -221,12 +213,12 @@ class Scene0_Overview(BaseMathScene):
             element_to_mobject=lambda value: MathTex(value),
         ).scale(0.95)
         
-        # SỬA LỖI CÂN ĐỐI: Căn giữa trực tiếp ma trận thay vì căn giữa cả Group
+        # SUA LOI CAN DOI: Can giua truc tiep ma tran thay vi can giua ca Group
         matrix_a.move_to(UP * 0.4) 
         label_a = MathTex("A =", color=ORANGE).next_to(matrix_a, LEFT)
         center_group = VGroup(label_a, matrix_a)
 
-        # Truyền riêng phần Text (Tiếng Việt) và MathTex (Công thức)
+        # Truyen rieng phan Text (Tieng Viet) va MathTex (Cong thuc)
         left_panel = self._overview_branch_panel(
             prefix="Phần 1: ", 
             math_formula="A = LL^T", 
@@ -240,11 +232,11 @@ class Scene0_Overview(BaseMathScene):
             accent_color=BLUE
         )
         
-        # Mở rộng khoảng cách 2 panel ra một chút cho thoáng
+        # Mo rong khoang cach 2 panel ra mot chut cho thoang
         left_panel.move_to(LEFT * 3.5 + DOWN * 1.8)
         right_panel.move_to(RIGHT * 3.5 + DOWN * 1.8)
 
-        # SỬA LỖI LỆCH MŨI TÊN: Mũi tên xuất phát từ chính giữa đáy của ma trận A để đảm bảo đối xứng tuyệt đối 100%
+        # SUA LOI LECH MUI TEN: Mui ten xuat phat tu chinh giua day cua ma tran A de dam bao doi xung tuyet doi 100%
         left_arrow = Arrow(matrix_a.get_bottom(), left_panel.get_top(), buff=0.2, color=GREEN)
         right_arrow = Arrow(matrix_a.get_bottom(), right_panel.get_top(), buff=0.2, color=BLUE)
 
@@ -274,11 +266,11 @@ class Scene0_Overview(BaseMathScene):
         self.clear()
 
     def _overview_branch_panel(self, prefix: str, math_formula: str, body: str, accent_color) -> VGroup:
-        # Tách riêng chữ tiếng Việt và công thức Toán để render chuẩn chỉnh
+        # Tach rieng chu tieng Viet va cong thuc Toan de render chuan chinh
         prefix_text = Text(prefix, color=accent_color, font_size=24, weight="BOLD")
         formula_text = MathTex(math_formula, color=accent_color).scale(0.85)
         
-        # Xếp chữ và công thức nằm ngang cạnh nhau
+        # Xep chu va cong thuc nam ngang canh nhau
         headline_group = VGroup(prefix_text, formula_text).arrange(RIGHT, buff=0.15)
         
         body_text = Text(body, color=WHITE, font_size=20)
@@ -286,7 +278,7 @@ class Scene0_Overview(BaseMathScene):
         
         frame = RoundedRectangle(
             corner_radius=0.2,
-            width=max(content.width + 0.8, 4.2), # Khung tự co giãn nếu nội dung dài hơn
+            width=max(content.width + 0.8, 4.2), # Khung tu co gian neu noi dung dai hon
             height=content.height + 0.6,
             stroke_color=accent_color,
             fill_color="#0b0f17",
@@ -297,16 +289,16 @@ class Scene0_Overview(BaseMathScene):
     
 class Scene1_Cholesky_IntroAndSPD(BaseMathScene):
     def construct(self):
-        # 1.1. Mục tiêu và Điều kiện
+        # 1.1. Muc tieu va Dieu kien
         self.show_transition_roadmap(1, "1.1. Bài toán & Điều kiện")
         self.show_goal_and_warning()
 
-        # 1.2. Kiểm tra SPD
+        # 1.2. Kiem tra SPD
         self.show_transition_roadmap(1, "1.2. Kiểm tra tính chất SPD")
         self.show_spd_proof()
 
     def show_goal_and_warning(self):
-        # Đã bỏ weight="BOLD" để sửa lỗi font ô vuông tiếng Việt
+        # Da bo weight="BOLD" de sua loi font o vuong tieng Viet
         title = Text("Mục tiêu của bài toán", color=GREEN, font_size=36).to_edge(UP, buff=0.8)
         formula = MathTex(r"A = L \cdot L^T", color=GREEN).scale(1.8).next_to(title, DOWN, buff=0.8)
         
@@ -329,7 +321,7 @@ class Scene1_Cholesky_IntroAndSPD(BaseMathScene):
         self.play(FadeOut(title), FadeOut(formula), FadeOut(warning_group), run_time=self.TIME_FAST)
 
     def show_spd_proof(self):
-        # Đã bỏ weight="BOLD"
+        # Da bo weight="BOLD"
         title1 = Text("1. Tính đối xứng (Symmetric)", color=YELLOW, font_size=32).to_edge(UP, buff=0.5)
         self.play(Write(title1), run_time=self.TIME_NORMAL)
 
@@ -353,11 +345,11 @@ class Scene1_Cholesky_IntroAndSPD(BaseMathScene):
         
         self.play(FadeOut(matrix_at), FadeOut(label_at), FadeOut(sym_result), run_time=self.TIME_FAST)
 
-        # --- BƯỚC 2: TIÊU CHUẨN SYLVESTER ---
+        # --- BUOC 2: TIEU CHUAN SYLVESTER ---
         title2 = Text("2. Tiêu chuẩn Sylvester (Định thức con > 0)", color=YELLOW, font_size=32).to_edge(UP, buff=0.5)
         self.play(Transform(title1, title2), run_time=self.TIME_NORMAL)
 
-        # FIX BỐ CỤC: Ép ma trận A nhỏ lại 1 chút và dời hẳn xuống dưới cùng bên trái để né chữ
+        # FIX BO CUC: Ep ma tran A nho lai 1 chut va doi han xuong duoi cung ben trai de ne chu
         self.play(matrix_group.animate.scale(0.85).move_to(LEFT * 3.5 + DOWN * 0.8), run_time=self.TIME_NORMAL)
 
         entries = matrix_a.get_entries()
@@ -393,7 +385,7 @@ class Scene1_Cholesky_IntroAndSPD(BaseMathScene):
         self.play(Write(VGroup(d3_line4, d3_line5)), run_time=self.TIME_NORMAL)
         self.wait(self.WAIT_SHORT)
 
-        stamp = Text("PASSED", color=GREEN, font_size=60) # Đã bỏ weight="BOLD"
+        stamp = Text("PASSED", color=GREEN, font_size=60) # Da bo weight="BOLD"
         stamp.rotate(20 * PI / 180).move_to(matrix_a.get_center())
         
         stamp_box = SurroundingRectangle(stamp, color=GREEN, buff=0.2, stroke_width=6)
@@ -409,12 +401,12 @@ from manim import Line
 
 class Scene2_Cholesky_Calculation(BaseMathScene):
     def construct(self):
-        # 1.3. Tính toán L
+        # 1.3. Tinh toan L
         self.show_transition_roadmap(1, "1.3. Tính toán ma trận L")
         self.calculate_l_step_by_step()
         self.verify_cholesky_numpy()
 
-        # 1.4. Chi phí
+        # 1.4. Chi phi
         self.show_transition_roadmap(1, "1.4. Đánh giá chi phí")
         self.show_cost_bar_chart()
 
@@ -514,7 +506,7 @@ class Scene2_Cholesky_Calculation(BaseMathScene):
         manual_row = VGroup(Text("Tính toán thủ công:", color=WHITE, font_size=26), manual_group).arrange(RIGHT, buff=0.8)
         numpy_row = VGroup(Text("Thư viện Numpy:", color=WHITE, font_size=26), numpy_group).arrange(RIGHT, buff=0.8)
         
-        # FIX TRÀN VIỀN: Đẩy khối đối chiếu lên giữa màn hình và thu hẹp khoảng cách với dòng kết luận
+        # FIX TRAN VIEN: Day khoi doi chieu len giua man hinh va thu hep khoang cach voi dong ket luan
         comparison = VGroup(manual_row, numpy_row).arrange(DOWN, aligned_edge=LEFT, buff=0.6).move_to(UP * 0.4)
 
         msg = Text("✓ Ma trận L khớp hoàn toàn với numpy.linalg.cholesky!", color=GREEN, font_size=26).next_to(comparison, DOWN, buff=0.8)
@@ -556,17 +548,17 @@ class Scene2_Cholesky_Calculation(BaseMathScene):
 
 class Scene3_Diagonalization(BaseMathScene):
     def construct(self):
-        # 2.1. Giới thiệu Bài toán
+        # 2.1. Gioi thieu Bai toan
         self.show_transition_roadmap(2, "2.1. Giới thiệu Bài toán")
         self.show_introduction()
 
-        # 2.2. Thuật toán Chéo hóa (Tìm D, P)
+        # 2.2. Thuat toan Cheo hoa (Tim D, P)
         self.show_transition_roadmap(2, "2.2. Thuật toán Chéo hóa (Tìm D, P)")
         self.find_matrix_D()
         self.find_matrix_P()
         self.show_final_assembly()
 
-        # Đối chiếu kết quả
+        # Doi chieu ket qua
         self.show_final_verification()
 
     def show_introduction(self):
@@ -615,7 +607,7 @@ class Scene3_Diagonalization(BaseMathScene):
             MathTex(r"\lambda_3 \approx 0.02", color=GREEN),
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.3).scale(0.8)
         
-        # FIX OVERLAP D MATRIX: Tăng h_buff lên 2.5
+        # FIX OVERLAP D MATRIX: Tang h_buff len 2.5
         d_matrix = Matrix(
             [[self.fmt(self.lambdas[0]), "0", "0"], ["0", self.fmt(self.lambdas[1]), "0"], ["0", "0", self.fmt(self.lambdas[2])]],
             element_to_mobject=lambda value: MathTex(value),
@@ -656,7 +648,7 @@ class Scene3_Diagonalization(BaseMathScene):
         self.wait(1.0)
         self.play(FadeOut(row_ops), run_time=self.TIME_FAST)
 
-        # FIX ARROW OVERLAP: Xóa tọa độ cứng và dùng next_to bám sát v1_group
+        # FIX ARROW OVERLAP: Xoa toa do cung va dung next_to bam sat v1_group
         arrow = MathTex(r"\Longrightarrow", color=GREEN).scale(1.2)
         
         def make_vec(label_str, val_list):
@@ -670,13 +662,13 @@ class Scene3_Diagonalization(BaseMathScene):
 
         vectors_panel = VGroup(v1_group, v2_group, v3_group).arrange(RIGHT, buff=0.4).move_to(RIGHT * 2.8 + DOWN * 0.5)
         
-        # Ghim mũi tên sát bên trái của v1_group
+        # Ghim mui ten sat ben trai cua v1_group
         arrow.next_to(v1_group, LEFT, buff=0.4)
 
         self.play(Write(arrow), FadeIn(v1_group), run_time=self.TIME_NORMAL)
         self.wait(1.0)
         
-        # FIX TEXT ALIGNMENT: Gán text mới chèn đúng lên tọa độ của step_p cũ
+        # FIX TEXT ALIGNMENT: Gan text moi chen dung len toa do cua step_p cu
         step_p2 = Text("Tương tự cho λ₂ và λ₃:", color=WHITE, font_size=24, weight="BOLD")
         step_p2.move_to(step_p.get_center()).align_to(step_p, LEFT)
         
@@ -689,7 +681,7 @@ class Scene3_Diagonalization(BaseMathScene):
         title = self.make_section_title("Bước 3: Tổng hợp kết quả Phân rã", GREEN, 30).to_edge(UP, buff=0.4)
         self.play(Write(title), run_time=self.TIME_NORMAL)
 
-        # FIX INNER OVERLAP MATRICES: Tăng h_buff=2.5 cho tất cả để số không đè nhau
+        # FIX INNER OVERLAP MATRICES: Tang h_buff=2.5 cho tat ca de so khong de nhau
         p_matrix = Matrix(self.to_manim_str_matrix(self.P), element_to_mobject=lambda value: MathTex(value), h_buff=2.5).scale(0.5)
         p_label = MathTex("P =", color=ORANGE).scale(0.8).next_to(p_matrix, UP)
         p_group = VGroup(p_label, p_matrix)
@@ -705,7 +697,7 @@ class Scene3_Diagonalization(BaseMathScene):
         pinv_label = MathTex("P^{-1} =", color=BLUE).scale(0.8).next_to(pinv_matrix, UP)
         pinv_group = VGroup(pinv_label, pinv_matrix)
 
-        # Thu hẹp khoảng cách buff giữa 3 khối để tránh tràn màn hình khi ma trận to ra
+        # Thu hep khoang cach buff giua 3 khoi de tranh tran man hinh khi ma tran to ra
         matrices_panel = VGroup(p_group, d_group, pinv_group).arrange(RIGHT, buff=0.4).move_to(UP * 0.5)
         self.play(FadeIn(matrices_panel, shift=UP*0.2), run_time=self.TIME_NORMAL)
 

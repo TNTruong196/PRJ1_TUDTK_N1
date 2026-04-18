@@ -1,4 +1,4 @@
-def to_matrix(mat, *, require_square: bool = False, error_message: str = "Invalid matrix."):
+def to_matrix(mat, *, require_square: bool = False, error_message: str = "Ma tran khong hop le."):
     try:
         rows = [list(row) for row in mat]
     except TypeError as exc:
@@ -30,7 +30,7 @@ def to_vector(vec):
     try:
         return [float(value) for value in values]
     except (TypeError, ValueError) as exc:
-        raise ValueError("Invalid vector.") from exc
+        raise ValueError("Vector khong hop le.") from exc
 
 
 def transpose(A):

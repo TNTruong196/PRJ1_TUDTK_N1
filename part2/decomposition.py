@@ -36,11 +36,11 @@ import numpy as np
 def cholesky_custom(A: list[list[float]]) -> list[list[float]]:
 	"""Tra ve ma tran tam giac duoi L sao cho A = L L^T neu A la SPD."""
 	if not A or not isinstance(A, list):
-		raise ValueError("Input matrix must be a non-empty square matrix.")
+		raise ValueError("Ma tran dau vao phai la ma tran vuong khong rong.")
 
 	n = len(A)
 	if any(not isinstance(row, list) or len(row) != n for row in A):
-		raise ValueError("Input matrix must be square.")
+		raise ValueError("Ma tran dau vao phai la ma tran vuong.")
 
 	matrix = [[float(A[i][j]) for j in range(n)] for i in range(n)]
 
@@ -48,7 +48,7 @@ def cholesky_custom(A: list[list[float]]) -> list[list[float]]:
 	for i in range(n):
 		for j in range(i + 1, n):
 			if abs(matrix[i][j] - matrix[j][i]) > eps:
-				raise ValueError("Matrix must be symmetric.")
+				raise ValueError("Ma tran phai doi xung.")
 
 	L = [[0.0 for _ in range(n)] for _ in range(n)]
 
@@ -57,7 +57,7 @@ def cholesky_custom(A: list[list[float]]) -> list[list[float]]:
 		diag_value = matrix[j][j] - sum_diag
 
 		if diag_value <= eps:
-			raise ValueError("Matrix is not positive definite.")
+			raise ValueError("Ma tran khong xac dinh duong.")
 
 		L[j][j] = math.sqrt(diag_value)
 

@@ -18,7 +18,7 @@ from solvers import (
 
 
 # =====================================================================
-# 1. Pure Python helpers
+# 1. Ham ho tro thuan Python
 # =====================================================================
 def mat_vec_mult(A, x):
     n = len(A)
@@ -45,27 +45,27 @@ def calc_relative_error(A, x_hat, b):
 
 
 # =====================================================================
-# 2. Random matrix generators
+# 2. Ham tao ma tran ngau nhien
 # =====================================================================
 import random
 
 def generate_diagonally_dominant_matrix(n, low=-10.0, high=10.0):
     """
-    Tạo ma trận chéo trội chặt (Strictly Diagonally Dominant) 
-    đảm bảo phương pháp Gauss-Seidel luôn hội tụ.
-    Độ phức tạp: O(n^2) - Chạy rất nhanh kể cả với n=1000.
+    Tao ma tran cheo troi chat (Strictly Diagonally Dominant)
+    dam bao phuong phap Gauss-Seidel luon hoi tu.
+    Do phuc tap: O(n^2) - Chay rat nhanh ke ca voi n=1000.
     """
     A = [[random.uniform(low, high) for _ in range(n)] for _ in range(n)]
     
     for i in range(n):
-        # 1. Tính tổng trị tuyệt đối của các phần tử ngoài đường chéo trên hàng i
+        # 1. Tinh tong tri tuyet doi cua cac phan tu ngoai duong cheo tren hang i
         off_diag_sum = sum(abs(A[i][j]) for j in range(n) if j != i)
         
-        # 2. Ép phần tử đường chéo phải lớn hơn tổng này
-        # Cộng thêm một giá trị dương ngẫu nhiên (vd: 1.0 đến 5.0) làm khoảng đệm an toàn
+        # 2. Ep phan tu duong cheo phai lon hon tong nay
+        # Cong them mot gia tri duong ngau nhien (vd: 1.0 den 5.0) lam khoang dem an toan
         A[i][i] = off_diag_sum + random.uniform(1.0, 5.0)
         
-        # 3. (Tùy chọn) Lật dấu ngẫu nhiên để test cases đa dạng hơn (có số âm/dương)
+        # 3. (Tuy chon) Lat dau ngau nhien de test cases da dang hon (co so am/duong)
         if random.choice([True, False]):
             A[i][i] = -A[i][i]
             
@@ -77,7 +77,7 @@ def generate_random_vector(n, low=-10.0, high=10.0):
 
 
 def generate_spd_pure_python(n):
-    """Tạo ma trận SPD"""
+    """Tao ma tran SPD"""
     M = [[random.uniform(0, 1) for _ in range(n)] for _ in range(n)]
     A = [[0.0] * n for _ in range(n)]
     for i in range(n):
@@ -89,18 +89,18 @@ def generate_spd_pure_python(n):
     return A
 
 def generate_hilbert_pure_python(n):
-    """Tạo ma trận Hilbert"""
+    """Tao ma tran Hilbert"""
     return [[1.0 / (i + j + 1) for j in range(n)] for i in range(n)]
 
 # =====================================================================
-# 3. Benchmark runner (Đã cập nhật tên hàm gọi)
+# 3. Ham chay benchmark (Da cap nhat ten ham goi)
 # =====================================================================
 def _build_cases(n_list, num_runs):
     cases = {}
     for n in n_list:
         runs = []
         for _ in range(num_runs):
-            # Gọi hàm sinh ma trận chéo trội thay vì ma trận ngẫu nhiên thuần
+            # Goi ham sinh ma tran cheo troi thay vi ma tran ngau nhien thuan
             A = generate_diagonally_dominant_matrix(n)
             b = generate_random_vector(n)
             runs.append((A, b))
@@ -125,10 +125,10 @@ def run_benchmark(verbose=True):
     )
 
     methods = [
-        ("Khử Gauss", solve_via_gauss),
-        ("Phân rã Cholesky", solve_via_cholesky),
-        ("Hệ PT Chuẩn (Cholesky)", solve_via_normal_equations),
-        ("Lặp Gauss-Seidel", gauss_seidel_for_benchmark),
+        ("Khu Gauss", solve_via_gauss),
+        ("Phan ra Cholesky", solve_via_cholesky),
+        ("He PT Chuan (Cholesky)", solve_via_normal_equations),
+        ("Lap Gauss-Seidel", gauss_seidel_for_benchmark),
     ]
 
     cases = _build_cases(n_list, num_runs)
@@ -193,7 +193,7 @@ def run_benchmark(verbose=True):
 
 def run_benchmark_stability(verbose=True, n=10, num_runs=5):
     """
-    Thực thi YÊU CẦU 3: Phân tích tính ổn định số (Numerical Stability).
+    Thuc thi YEU CAU 3: Phan tich tinh on dinh so (Numerical Stability).
     """
     A_hilbert = generate_hilbert_pure_python(n)
     A_spd = generate_spd_pure_python(n)
@@ -207,16 +207,16 @@ def run_benchmark_stability(verbose=True, n=10, num_runs=5):
     )
 
     methods = [
-        ("Khử Gauss", solve_via_gauss),
-        ("Phân rã Cholesky", solve_via_cholesky),
-        ("Hệ PT Chuẩn (Cholesky)", solve_via_normal_equations),
-        ("Lặp Gauss-Seidel", gauss_seidel_for_benchmark),
+        ("Khu Gauss", solve_via_gauss),
+        ("Phan ra Cholesky", solve_via_cholesky),
+        ("He PT Chuan (Cholesky)", solve_via_normal_equations),
+        ("Lap Gauss-Seidel", gauss_seidel_for_benchmark),
     ]
 
     results = {'SPD': {}, 'Hilbert': {}}
 
     if verbose:
-        print("\n\n========== BENCHMARK TÍNH ỔN ĐỊNH SỐ ==========")
+        print("\n\n========== BENCHMARK TINH ON DINH SO ==========")
         print("Muc tieu: So sanh do chinh xac tren ma tran Tot (SPD) va ma tran Xau (Hilbert).")
         print(f"Kich thuoc thu nghiem: n = {n}. So lan chay: {num_runs}")
         print("Sai so tuong doi: ||A x_hat - b||_2 / ||b||_2")

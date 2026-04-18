@@ -43,12 +43,12 @@ def backward_substitution(U, y):
 
 
 def solve_via_gauss(A, b):
-    A_list = to_matrix(A, error_message="Input matrix must be non-empty and rectangular.")
+    A_list = to_matrix(A, error_message="Ma tran dau vao phai khong rong va co dang chu nhat.")
     b_list = to_vector(b)
     _, x, _ = gaussian_eliminate(A_list, b_list, verbose=False)
     n_cols = len(A_list[0])
-    # gaussian_eliminate returns a parametric expression for non-unique systems.
-    # In Part 3, this solver only accepts a unique numeric solution vector.
+    # gaussian_eliminate tra ve bieu dien tham so cho he khong co nghiem duy nhat.
+    # Trong Phan 3, solver nay chi chap nhan vector nghiem so duy nhat.
     if (
         x is None
         or not isinstance(x, list)
@@ -60,7 +60,7 @@ def solve_via_gauss(A, b):
 
 
 def solve_via_cholesky(A, b):
-    A_list = to_matrix(A, require_square=True, error_message="Input matrix must be a non-empty square matrix.")
+    A_list = to_matrix(A, require_square=True, error_message="Ma tran dau vao phai la ma tran vuong khong rong.")
     b_list = to_vector(b)
     if len(b_list) != len(A_list):
         raise ValueError("kich thuoc b khong phu hop voi A")
@@ -71,7 +71,7 @@ def solve_via_cholesky(A, b):
 
 
 def solve_via_normal_equations(A, b):
-    A_list = to_matrix(A, error_message="Input matrix must be non-empty and rectangular.")
+    A_list = to_matrix(A, error_message="Ma tran dau vao phai khong rong va co dang chu nhat.")
     b_list = to_vector(b)
     if len(b_list) != len(A_list):
         raise ValueError("kich thuoc b khong phu hop voi A")
@@ -217,10 +217,10 @@ def solve_gauss_seidel(
     verbose=True,
 ):
     """
-    Giải hệ phương trình tuyến tính Ax = b bằng phương pháp lặp Gauss-Seidel.
-    (Phiên bản thuần Python, không sử dụng thư viện ngoài)
+    Giai he phuong trinh tuyen tinh Ax = b bang phuong phap lap Gauss-Seidel.
+    (Phien ban thuan Python, khong su dung thu vien ngoai)
     """
-    A_list = to_matrix(A, require_square=True, error_message="Input matrix must be a non-empty square matrix.")
+    A_list = to_matrix(A, require_square=True, error_message="Ma tran dau vao phai la ma tran vuong khong rong.")
     b_list = to_vector(b)
     n = len(A_list)
     if len(b_list) != n:
@@ -232,13 +232,13 @@ def solve_gauss_seidel(
             raise ValueError("he co phan tu duong cheo bang 0, khong the ap dung Gauss-Seidel")
 
     if require_convergence_check and not _is_strictly_diagonally_dominant(A_list):
-        msg = "Gauss-Seidel convergence is not guaranteed (matrix is not strictly diagonally dominant)."
+        msg = "Gauss-Seidel khong duoc dam bao hoi tu (ma tran khong cheo troi chat)."
         if strict_convergence:
             raise ValueError(msg)
         if verbose:
             print(f"[Gauss-Seidel] Canh bao: {msg}")
 
-    # 1. Khởi tạo vector nghiệm ban đầu
+    # 1. Khoi tao vector nghiem ban dau
     if x0 is None:
         x = [0.0] * n
     else:
@@ -264,7 +264,7 @@ def solve_gauss_seidel(
             old_xi = x[i]
             new_xi = (b_list[i] - lower_sum - upper_sum) / row_i[i]
             if not math.isfinite(new_xi):
-                raise OverflowError("Gauss-Seidel diverged or overflowed")
+                raise OverflowError("Gauss-Seidel phan ky hoac tran so")
             x[i] = new_xi
 
             diff = abs(new_xi - old_xi)
@@ -272,18 +272,18 @@ def solve_gauss_seidel(
                 max_diff = diff
 
         if not math.isfinite(max_diff):
-            raise OverflowError("Gauss-Seidel diverged or overflowed")
+            raise OverflowError("Gauss-Seidel phan ky hoac tran so")
         
         if max_diff < tolerance:
             if verbose:
-                print(f"[Gauss-Seidel] Đã hội tụ sau {k+1} vòng lặp.")
+                print(f"[Gauss-Seidel] Da hoi tu sau {k+1} vong lap.")
             return x
 
         if any(not math.isfinite(value) for value in x):
-            raise OverflowError("Gauss-Seidel diverged or overflowed")
+            raise OverflowError("Gauss-Seidel phan ky hoac tran so")
             
     if verbose:
-        print("[Gauss-Seidel] Cảnh báo: Vượt quá số vòng lặp tối đa mà chưa hội tụ.")
+        print("[Gauss-Seidel] Canh bao: Vuot qua so vong lap toi da ma chua hoi tu.")
     return x
 
 if __name__ == "__main__":

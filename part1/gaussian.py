@@ -1,7 +1,7 @@
 import re
 
 def _print_inf(U, c, p_cols, n):
-    """Hàm helper để tính và in ra nghiệm khi có vô số nghiệm"""
+    """Ham ho tro de tinh va in ra nghiem khi co vo so nghiem"""
     free = [j for j in range(n) if j not in p_cols]
     sol = [{} for _ in range(n)]
     for f in free: 
@@ -28,24 +28,24 @@ def _print_inf(U, c, p_cols, n):
         print(f"x_{i+1} = {res.strip() or '0'}")
 
 def back_substitution(U, c):
-    """Giải hệ tam giác trên"""
+    """Giai he tam giac tren"""
     n = len(U)
     if any(len(row) != n for row in U):
-        raise ValueError("Ma trận U phải là ma trận vuông")
+        raise ValueError("Ma tran U phai la ma tran vuong")
     
     x = [0.0] * n
     for i in range(n - 1, -1, -1):
         if abs(U[i][i]) < 1e-9:
-            raise ValueError("Ma trận suy biến")
+            raise ValueError("Ma tran suy bien")
         s = sum(U[i][j] * x[j] for j in range(i + 1, n))
         x[i] = (c[i] - s) / U[i][i]
     return x
 
 def gaussian_eliminate(A, b, verbose=False):
     """
-    Khử Gausss - Trả về ma trận đã khử, nghiệm và cơ sở các
-    không gian cột, dòng, nghiệm.
-    In ra dạng tổng quát nếu có vô số nghiệm.
+    Khu Gausss - Tra ve ma tran da khu, nghiem va co so cac
+    khong gian cot, dong, nghiem.
+    In ra dang tong quat neu co vo so nghiem.
     """
     M = [row[:] for row in A]
     c = b[:]
@@ -57,7 +57,7 @@ def gaussian_eliminate(A, b, verbose=False):
 
     for col in range(n):
         if p_row >= m: break
-        # Pivot
+        # Tim pivot
         p = max(range(p_row, m), key=lambda r: abs(M[r][col]))
         if abs(M[p][col]) <= eps: continue
 
@@ -74,19 +74,19 @@ def gaussian_eliminate(A, b, verbose=False):
         p_cols.append(col)
         p_row += 1
 
-    # Kiểm tra vô nghiệm
+    # Kiem tra vo nghiem
     for r in range(m):
         if all(abs(M[r][j]) < eps for j in range(n)) and abs(c[r]) > eps:
-            if verbose: print("Hệ vô nghiệm")
+            if verbose: print("He vo nghiem")
             return M, None, swaps
 
-    # Kiểm tra vô số nghiệm
+    # Kiem tra vo so nghiem
     if len(p_cols) < n:
         if verbose: 
-            print("Hệ có vô số nghiệm")
+            print("He co vo so nghiem")
             _print_inf(M, c, p_cols, n)
         return M, None, swaps
 
-    # Nghiệm duy nhất
+    # Nghiem duy nhat
     x = back_substitution([row[:n] for row in M[:n]], c[:n])
     return M, x, swaps
