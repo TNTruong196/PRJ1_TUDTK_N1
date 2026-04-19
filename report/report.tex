@@ -1041,6 +1041,22 @@ Trong quá trình hiện thực hóa video, nhóm gặp các khó khăn kỹ thu
 
 Biện pháp nhóm áp dụng gồm: tách công thức lớn thành nhiều \texttt{MathTex} theo dòng, chuẩn hóa timing bằng hằng số class, và dùng pipeline render theo scene để rút ngắn chu trình chỉnh sửa.
 
+\subsection{Notebook kiểm thử riêng cho Phần 2}
+
+Để tăng tính nhất quán giữa phần cài đặt và phần chấm tiêu chí, nhóm bổ sung notebook kiểm thử chuyên biệt cho Phần 2 tại \texttt{part2/test\_part2.ipynb}. Notebook này không thay thế unit test trong từng file mã nguồn, mà đóng vai trò ``test harness'' tập trung, giúp chạy lại nhanh toàn bộ các hàm trọng tâm của Phần 2 theo đúng phạm vi đề bài.
+
+\textbf{Phạm vi kiểm thử trong notebook:}
+\begin{itemize}
+    \item \texttt{cholesky\_custom}
+    \item \texttt{diagonalize\_matrix}
+    \item \texttt{verify\_diagonalization}
+    \item \texttt{matrix\_power\_via\_diagonalization}
+\end{itemize}
+
+Với mỗi hàm, notebook tổ chức 5 test case theo cả hai hướng: ca hợp lệ (happy path) và ca biên/lỗi (edge case), ví dụ: ma trận không vuông, ma trận không SPD, ma trận không chéo hóa được, ngưỡng điều kiện quá chặt, và lũy thừa âm. Kết quả được tổng hợp bằng \texttt{unittest.TestSuite} ở cell cuối để xuất số lượng test đã chạy, số \texttt{failures} và \texttt{errors}, phục vụ đưa bằng chứng trực tiếp vào báo cáo.
+
+Việc tách riêng notebook kiểm thử cho Phần 2 giúp người đọc kiểm chứng độc lập phần decomposition/diagonalization mà không cần chạy toàn bộ project.
+
 \subsection{Bước đánh giá hoàn thành các tiêu chí}
 
 \begin{table}[H]
@@ -1191,6 +1207,23 @@ Chi tiết số liệu benchmark được chuyển về \textbf{Phụ lục} đ�
     \item Về thời gian, cài đặt thuần Python chậm hơn các hàm thư viện do NumPy tận dụng backend C/Fortran đã tối ưu hóa ở tầng thấp.
     \item Trên Hilbert, số vòng lặp tăng mạnh và sai số dễ bị khuếch đại; kết quả này phản ánh đúng bản chất ill-conditioned, không phải lỗi logic của thuật toán.
 \end{itemize}
+
+\subsection{Notebook kiểm thử riêng cho Phần 3}
+
+Song song với các kiểm thử trong file nguồn, nhóm bổ sung notebook \texttt{part3/test\_part3.ipynb} để gom các kịch bản test đúng trọng tâm Phần 3 theo đề bài. Mục tiêu của notebook là kiểm tra đồng thời tính đúng đắn thuật toán giải hệ và tính hợp lệ của pipeline benchmark.
+
+\textbf{Nhóm hàm được kiểm thử trong notebook:}
+\begin{itemize}
+    \item \texttt{solve\_via\_gauss}
+    \item \texttt{solve\_via\_cholesky}
+    \item \texttt{solve\_via\_normal\_equations}
+    \item \texttt{solve\_gauss\_seidel}
+    \item Nhóm benchmark/stability: \texttt{run\_benchmark} và \texttt{run\_benchmark\_stability}
+\end{itemize}
+
+Mỗi nhóm hàm được thiết kế 5 test case, bao gồm: nghiệm duy nhất, yêu cầu pivot, dữ liệu SPD hợp lệ, dữ liệu không thỏa điều kiện phương pháp, sai kích thước đầu vào, điều kiện hội tụ Gauss--Seidel, và kiểm tra cấu trúc dữ liệu trả về của benchmark (keys, metrics, số lần chạy thành công). Ở cuối notebook, các test được gom bằng \texttt{unittest.TestSuite} để tạo báo cáo tổng kết \texttt{run/failures/errors} theo một lệnh chạy duy nhất.
+
+Notebook này giúp chuẩn hóa bước ``kiểm thử lặp lại'' cho Phần 3: khi thay đổi solver hoặc benchmark, chỉ cần chạy lại notebook để nhanh chóng phát hiện hồi quy (regression) trước khi cập nhật số liệu vào phần phân tích và phụ lục.
 
 \subsection{Đánh giá hoàn thành các tiêu chí Phần 3}
 
