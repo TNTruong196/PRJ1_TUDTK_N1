@@ -93,7 +93,7 @@ def generate_hilbert_pure_python(n):
     return [[1.0 / (i + j + 1) for j in range(n)] for i in range(n)]
 
 # =====================================================================
-# 3. Ham chay benchmark (Da cap nhat ten ham goi)
+# 3. Ham chay benchmark 
 # =====================================================================
 def _build_cases(n_list, num_runs):
     cases = {}
