@@ -1277,6 +1277,9 @@ Từ các kết quả và khó khăn trên, nhóm rút ra định hướng cải
     \item G. Strang, \textit{Introduction to Linear Algebra}, 5th ed. Wellesley, MA: Wellesley-Cambridge Press, 2016.
     \item H. Anton và C. Rorres, \textit{Elementary Linear Algebra: Applications Version}, 11th ed. Hoboken, NJ: Wiley, 2013.
     \item D. C. Lay, S. R. Lay, và J. J. McDonald, \textit{Linear Algebra and Its Applications}, 5th ed. Boston, MA: Pearson, 2015.
+    \item G. H. Golub and C. F. Van Loan, \textit{Matrix Computations}, 4th ed. Baltimore, MD: Johns Hopkins University Press, 2013.
+    \item L. N. Trefethen and D. Bau III, \textit{Numerical Linear Algebra}. Philadelphia, PA: SIAM, 1997.
+    \item N. J. Higham, \textit{Accuracy and Stability of Numerical Algorithms}, 2nd ed. Philadelphia, PA: SIAM, 2002.
 \end{enumerate}
 
 \section*{Phụ lục}
@@ -1326,26 +1329,45 @@ Sai số tương đối được dùng trong mọi bảng là:
 \end{longtable}
 \endgroup
 
-\begin{table}[H]
-\centering
-\small
-\setlength{\tabcolsep}{5pt}
+\begingroup
+\scriptsize
+\setlength{\tabcolsep}{4pt}
 \renewcommand{\arraystretch}{1.15}
-\begin{tabular}{|p{0.15\textwidth}|p{0.24\textwidth}|p{0.13\textwidth}|p{0.16\textwidth}|p{0.20\textwidth}|}
+\begin{longtable}{|c|p{0.18\textwidth}|p{0.22\textwidth}|p{0.13\textwidth}|p{0.16\textwidth}|p{0.17\textwidth}|}
 \hline
-\textbf{Loại ma trận} & \textbf{Phương pháp} & \textbf{Thời gian TB (s)} & \textbf{Sai số tương đối} & \textbf{Tỷ lệ thành công} \\ \hline
-SPD (well-conditioned) & Khử Gauss & 0.0001 & $9.45\times 10^{-17}$ & 5/5 \\ \hline
-SPD (well-conditioned) & Phân rã Cholesky & 0.0001 & $7.72\times 10^{-17}$ & 5/5 \\ \hline
-SPD (well-conditioned) & Hệ PT Chuẩn (Cholesky) & 0.0001 & $3.70\times 10^{-16}$ & 5/5 \\ \hline
-SPD (well-conditioned) & Lặp Gauss--Seidel & 0.0002 & $1.03\times 10^{-9}$ & 5/5 \\ \hline
-Hilbert (ill-conditioned) & Khử Gauss & -- & -- & 0/5 (hệ không có nghiệm duy nhất) \\ \hline
-Hilbert (ill-conditioned) & Phân rã Cholesky & 0.0001 & $8.50\times 10^{-17}$ & 5/5 \\ \hline
-Hilbert (ill-conditioned) & Hệ PT Chuẩn (Cholesky) & -- & -- & 0/5 (Matrix is not positive definite.) \\ \hline
-Hilbert (ill-conditioned) & Lặp Gauss--Seidel & 0.0025 & $8.35\times 10^{-6}$ & 5/5 \\ \hline
-\end{tabular}
-\caption{Benchmark ổn định số (n=10, 5 lần chạy): so sánh ma trận SPD và Hilbert}
+\textbf{n} & \textbf{Loại ma trận} & \textbf{Phương pháp} & \textbf{Thời gian TB (s)} & \textbf{Sai số tương đối} & \textbf{Tỷ lệ thành công} \\ \hline
+\endfirsthead
+\hline
+\textbf{n} & \textbf{Loại ma trận} & \textbf{Phương pháp} & \textbf{Thời gian TB (s)} & \textbf{Sai số tương đối} & \textbf{Tỷ lệ thành công} \\ \hline
+\endhead
+10 & SPD (well-conditioned) & Khử Gauss & 0.0001 & $9.18\times 10^{-17}$ & 5/5 \\ \hline
+10 & SPD (well-conditioned) & Phân rã Cholesky & 0.0001 & $7.26\times 10^{-17}$ & 5/5 \\ \hline
+10 & SPD (well-conditioned) & Hệ PT Chuẩn (Cholesky) & 0.0001 & $4.65\times 10^{-16}$ & 5/5 \\ \hline
+10 & SPD (well-conditioned) & Lặp Gauss--Seidel & 0.0001 & $8.21\times 10^{-10}$ & 5/5 \\ \hline
+10 & Hilbert (ill-conditioned) & Khử Gauss & -- & -- & 0/5 (hệ không có nghiệm duy nhất) \\ \hline
+10 & Hilbert (ill-conditioned) & Phân rã Cholesky & 0.0001 & $8.50\times 10^{-17}$ & 5/5 \\ \hline
+10 & Hilbert (ill-conditioned) & Hệ PT Chuẩn (Cholesky) & -- & -- & 0/5 (Ma trận không xác định dương.) \\ \hline
+10 & Hilbert (ill-conditioned) & Lặp Gauss--Seidel & 0.0033 & $8.35\times 10^{-6}$ & 5/5 \\ \hline
+20 & SPD (well-conditioned) & Khử Gauss & 0.0006 & $9.39\times 10^{-17}$ & 5/5 \\ \hline
+20 & SPD (well-conditioned) & Phân rã Cholesky & 0.0004 & $1.38\times 10^{-16}$ & 5/5 \\ \hline
+20 & SPD (well-conditioned) & Hệ PT Chuẩn (Cholesky) & 0.0012 & $5.83\times 10^{-16}$ & 5/5 \\ \hline
+20 & SPD (well-conditioned) & Lặp Gauss--Seidel & 0.0010 & $9.55\times 10^{-10}$ & 5/5 \\ \hline
+20 & Hilbert (ill-conditioned) & Khử Gauss & -- & -- & 0/5 (hệ không có nghiệm duy nhất) \\ \hline
+20 & Hilbert (ill-conditioned) & Phân rã Cholesky & -- & -- & 0/5 (Ma trận không xác định dương.) \\ \hline
+20 & Hilbert (ill-conditioned) & Hệ PT Chuẩn (Cholesky) & -- & -- & 0/5 (Ma trận không xác định dương.) \\ \hline
+20 & Hilbert (ill-conditioned) & Lặp Gauss--Seidel & 0.0134 & $1.71\times 10^{-5}$ & 5/5 \\ \hline
+50 & SPD (well-conditioned) & Khử Gauss & 0.0040 & $9.88\times 10^{-17}$ & 5/5 \\ \hline
+50 & SPD (well-conditioned) & Phân rã Cholesky & 0.0029 & $2.08\times 10^{-16}$ & 5/5 \\ \hline
+50 & SPD (well-conditioned) & Hệ PT Chuẩn (Cholesky) & 0.0114 & $2.89\times 10^{-15}$ & 5/5 \\ \hline
+50 & SPD (well-conditioned) & Lặp Gauss--Seidel & 0.0155 & $1.09\times 10^{-9}$ & 5/5 \\ \hline
+50 & Hilbert (ill-conditioned) & Khử Gauss & -- & -- & 0/5 (hệ không có nghiệm duy nhất) \\ \hline
+50 & Hilbert (ill-conditioned) & Phân rã Cholesky & -- & -- & 0/5 (Ma trận không xác định dương.) \\ \hline
+50 & Hilbert (ill-conditioned) & Hệ PT Chuẩn (Cholesky) & -- & -- & 0/5 (Ma trận không xác định dương.) \\ \hline
+50 & Hilbert (ill-conditioned) & Lặp Gauss--Seidel & 0.0470 & $2.81\times 10^{-5}$ & 5/5 \\ \hline
+\caption{Benchmark ổn định số (n=10,20,50; 5 lần chạy mỗi kích thước): so sánh ma trận SPD và Hilbert}
 \label{tab:appendix_stability_benchmark}
-\end{table}
+\end{longtable}
+\endgroup
 
 \subsection*{Phụ lục B: GitHub Repository}
 \addcontentsline{toc}{subsection}{Phụ lục B: GitHub Repository}

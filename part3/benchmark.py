@@ -278,3 +278,7 @@ if __name__ == "__main__":
     # run_benchmark(verbose=True)
     
     run_benchmark_stability(verbose=True, n=10, num_runs=5)
+    
+    run_benchmark_stability(verbose=True, n=20, num_runs=5)
+    
+    run_benchmark_stability(verbose=True, n=50, num_runs=5)
